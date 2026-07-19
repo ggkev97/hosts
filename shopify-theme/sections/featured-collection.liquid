@@ -1,5 +1,8 @@
 <section class="featured-collection page-width section-spacing">
   <div class="section-header">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    {%- endif -%}
     {%- if section.settings.heading != blank -%}
       <h2 class="section-heading">{{ section.settings.heading }}</h2>
     {%- endif -%}
@@ -33,9 +36,15 @@
   "settings": [
     {
       "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "The Collection"
+    },
+    {
+      "type": "text",
       "id": "heading",
       "label": "Heading",
-      "default": "Featured"
+      "default": "Shop Now"
     },
     {
       "type": "collection",

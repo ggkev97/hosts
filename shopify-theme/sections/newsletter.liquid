@@ -1,5 +1,8 @@
-<section class="newsletter-section color-accent section-spacing-inner">
+<section class="newsletter-section section-spacing-inner">
   <div class="page-width newsletter-section__inner">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    {%- endif -%}
     {%- if section.settings.heading != blank -%}
       <h2 class="section-heading">{{ section.settings.heading }}</h2>
     {%- endif -%}
@@ -18,7 +21,7 @@
           placeholder="{{ 'newsletter.label' | t }}"
           required
         >
-        <button type="submit" class="button button--contrast">{{ 'newsletter.button_label' | t }}</button>
+        <button type="submit" class="button">{{ 'newsletter.button_label' | t }}</button>
       </div>
       {%- if form.posted_successfully? -%}
         <p class="newsletter-form__message">{{ 'newsletter.success' | t }}</p>
@@ -33,9 +36,15 @@
   "settings": [
     {
       "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Stay Looped In"
+    },
+    {
+      "type": "text",
       "id": "heading",
       "label": "Heading",
-      "default": "Join the list"
+      "default": "Get Drop Alerts"
     },
     {
       "type": "text",

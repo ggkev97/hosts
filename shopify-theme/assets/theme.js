@@ -264,6 +264,40 @@
   }
 
   /* ----------------------------------------------------------------
+     Drop countdown
+  ---------------------------------------------------------------- */
+  document.querySelectorAll('[data-countdown]').forEach(function (el) {
+    var target = new Date(el.dataset.countdown.replace(' ', 'T')).getTime();
+    if (isNaN(target)) return;
+
+    var days = el.querySelector('[data-cd-days]');
+    var hours = el.querySelector('[data-cd-hours]');
+    var mins = el.querySelector('[data-cd-mins]');
+    var secs = el.querySelector('[data-cd-secs]');
+
+    function pad(n) {
+      return String(n).padStart(2, '0');
+    }
+
+    function tick() {
+      var diff = target - Date.now();
+      if (diff <= 0) {
+        el.hidden = true;
+        clearInterval(timer);
+        return;
+      }
+      el.hidden = false;
+      days.textContent = pad(Math.floor(diff / 86400000));
+      hours.textContent = pad(Math.floor(diff / 3600000) % 24);
+      mins.textContent = pad(Math.floor(diff / 60000) % 60);
+      secs.textContent = pad(Math.floor(diff / 1000) % 60);
+    }
+
+    var timer = setInterval(tick, 1000);
+    tick();
+  });
+
+  /* ----------------------------------------------------------------
      Collection sorting
   ---------------------------------------------------------------- */
   var sortSelect = document.querySelector('[data-sort-select]');

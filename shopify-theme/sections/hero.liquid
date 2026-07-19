@@ -1,6 +1,6 @@
-<section class="hero{% if section.settings.full_width %} hero--full{% endif %}">
-  <div class="hero__media">
-    {%- if section.settings.image != blank -%}
+<section class="hero{% if section.settings.full_width %} hero--full{% endif %}{% if section.settings.image == blank %} hero--gradient{% endif %}">
+  {%- if section.settings.image != blank -%}
+    <div class="hero__media">
       <img
         src="{{ section.settings.image | image_url: width: 2000 }}"
         srcset="{{ section.settings.image | image_url: width: 750 }} 750w,
@@ -12,16 +12,25 @@
         height="{{ section.settings.image.height }}"
         {% if section.index == 1 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
       >
-    {%- else -%}
-      {{ 'lifestyle-1' | placeholder_svg_tag: 'hero__placeholder' }}
-    {%- endif -%}
-  </div>
+    </div>
+  {%- endif -%}
   <div class="hero__content hero__content--{{ section.settings.content_position }}">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    {%- endif -%}
     {%- if section.settings.heading != blank -%}
       <h1 class="hero__heading">{{ section.settings.heading }}</h1>
     {%- endif -%}
     {%- if section.settings.subheading != blank -%}
       <p class="hero__subheading">{{ section.settings.subheading }}</p>
+    {%- endif -%}
+    {%- if section.settings.show_countdown and section.settings.countdown_date != blank -%}
+      <div class="countdown" data-countdown="{{ section.settings.countdown_date | escape }}" hidden>
+        <div class="countdown__unit"><span class="countdown__num" data-cd-days>00</span><span class="countdown__label">{{ section.settings.countdown_days_label }}</span></div>
+        <div class="countdown__unit"><span class="countdown__num" data-cd-hours>00</span><span class="countdown__label">{{ section.settings.countdown_hours_label }}</span></div>
+        <div class="countdown__unit"><span class="countdown__num" data-cd-mins>00</span><span class="countdown__label">{{ section.settings.countdown_mins_label }}</span></div>
+        <div class="countdown__unit"><span class="countdown__num" data-cd-secs>00</span><span class="countdown__label">{{ section.settings.countdown_secs_label }}</span></div>
+      </div>
     {%- endif -%}
     {%- if section.settings.button_label != blank -%}
       <a href="{{ section.settings.button_link }}" class="button button--large">
@@ -38,7 +47,14 @@
     {
       "type": "image_picker",
       "id": "image",
-      "label": "Background image"
+      "label": "Background image",
+      "info": "Optional — without an image the hero uses a dark gradient backdrop"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "The Collection"
     },
     {
       "type": "text",
@@ -56,7 +72,7 @@
       "type": "text",
       "id": "button_label",
       "label": "Button label",
-      "default": "Shop now"
+      "default": "Shop the Drop"
     },
     {
       "type": "url",
@@ -88,6 +104,46 @@
       "id": "full_width",
       "label": "Full width",
       "default": true
+    },
+    {
+      "type": "header",
+      "content": "Drop countdown"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_countdown",
+      "label": "Show countdown",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "countdown_date",
+      "label": "Drop date & time",
+      "info": "Format: 2026-08-01 18:00 (visitor's local time). Hides automatically once passed."
+    },
+    {
+      "type": "text",
+      "id": "countdown_days_label",
+      "label": "Days label",
+      "default": "Days"
+    },
+    {
+      "type": "text",
+      "id": "countdown_hours_label",
+      "label": "Hours label",
+      "default": "Hrs"
+    },
+    {
+      "type": "text",
+      "id": "countdown_mins_label",
+      "label": "Minutes label",
+      "default": "Min"
+    },
+    {
+      "type": "text",
+      "id": "countdown_secs_label",
+      "label": "Seconds label",
+      "default": "Sec"
     }
   ],
   "presets": [

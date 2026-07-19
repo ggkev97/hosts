@@ -14,6 +14,9 @@
       {%- endif -%}
     </div>
     <div class="image-with-text__content">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+      {%- endif -%}
       {%- if section.settings.heading != blank -%}
         <h2 class="section-heading">{{ section.settings.heading }}</h2>
       {%- endif -%}
@@ -37,6 +40,12 @@
       "type": "image_picker",
       "id": "image",
       "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "The Brand"
     },
     {
       "type": "text",

@@ -1,13 +1,15 @@
 {
   "current": {
-    "color_text": "#111111",
-    "color_background": "#ffffff",
-    "color_accent": "#111111",
-    "color_accent_contrast": "#ffffff",
+    "color_text": "#f5f5f2",
+    "color_background": "#0a0a0b",
+    "color_surface": "#141416",
+    "color_accent": "#f5f5f2",
+    "color_accent_contrast": "#0a0a0b",
     "type_header_font": "helvetica_n7",
     "type_body_font": "helvetica_n4",
+    "use_brand_fonts": true,
     "page_width": 1300,
-    "corner_radius": 0,
+    "corner_radius": 2,
     "logo_width": 140,
     "cart_drawer_enabled": true
   }

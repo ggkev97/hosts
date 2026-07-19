@@ -1,0 +1,77 @@
+{
+  "general": {
+    "pagination": {
+      "page": "Page {{ page }}",
+      "next": "Next page",
+      "previous": "Previous page"
+    },
+    "search": {
+      "search": "Search",
+      "placeholder": "Search products",
+      "no_results": "No results found for \"{{ terms }}\". Check the spelling or try a different word.",
+      "results_with_count": {
+        "one": "{{ count }} result for \"{{ terms }}\"",
+        "other": "{{ count }} results for \"{{ terms }}\""
+      }
+    },
+    "social": {
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "twitter": "X (Twitter)",
+      "facebook": "Facebook"
+    },
+    "404": {
+      "title": "Page not found",
+      "subtext": "The page you were looking for doesn't exist.",
+      "link": "Continue shopping"
+    }
+  },
+  "accessibility": {
+    "skip_to_content": "Skip to content",
+    "close": "Close",
+    "open_menu": "Open menu",
+    "cart_count": "items in cart"
+  },
+  "newsletter": {
+    "label": "Email",
+    "success": "Thanks for subscribing!",
+    "button_label": "Subscribe"
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Add to cart",
+      "sold_out": "Sold out",
+      "unavailable": "Unavailable",
+      "on_sale": "Sale",
+      "quantity": "Quantity",
+      "vendor": "Vendor",
+      "regular_price": "Regular price",
+      "sale_price": "Sale price",
+      "from_price_html": "From {{ price }}",
+      "view_details": "View details"
+    }
+  },
+  "collections": {
+    "general": {
+      "no_products": "No products found in this collection.",
+      "sort_by": "Sort by",
+      "product_count": {
+        "one": "{{ count }} product",
+        "other": "{{ count }} products"
+      }
+    }
+  },
+  "cart": {
+    "general": {
+      "title": "Your cart",
+      "empty": "Your cart is empty",
+      "continue_shopping": "Continue shopping",
+      "checkout": "Check out",
+      "subtotal": "Subtotal",
+      "remove": "Remove",
+      "quantity": "Quantity",
+      "taxes_and_shipping_at_checkout": "Taxes and shipping calculated at checkout",
+      "update": "Update cart"
+    }
+  }
+}

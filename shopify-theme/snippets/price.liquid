@@ -1,0 +1,28 @@
+{%- comment -%}
+  Renders a price for a product or variant.
+  Usage: {% render 'price', product: product %}
+         {% render 'price', variant: variant %}
+{%- endcomment -%}
+{%- liquid
+  if variant
+    assign compare_price = variant.compare_at_price
+    assign price = variant.price
+  else
+    assign compare_price = product.compare_at_price
+    assign price = product.price
+  endif
+  assign money_price = price | money
+-%}
+<div class="price{% if compare_price > price %} price--on-sale{% endif %}">
+  {%- if compare_price > price -%}
+    <span class="visually-hidden">{{ 'products.product.sale_price' | t }}</span>
+    <span class="price__sale">{{ money_price }}</span>
+    <span class="visually-hidden">{{ 'products.product.regular_price' | t }}</span>
+    <s class="price__compare">{{ compare_price | money }}</s>
+    <span class="price__badge">{{ 'products.product.on_sale' | t }}</span>
+  {%- elsif product.price_varies and variant == null -%}
+    <span class="price__regular">{{ 'products.product.from_price_html' | t: price: money_price }}</span>
+  {%- else -%}
+    <span class="price__regular">{{ money_price }}</span>
+  {%- endif -%}
+</div>

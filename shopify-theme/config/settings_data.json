@@ -1,0 +1,14 @@
+{
+  "current": {
+    "color_text": "#111111",
+    "color_background": "#ffffff",
+    "color_accent": "#111111",
+    "color_accent_contrast": "#ffffff",
+    "type_header_font": "helvetica_n7",
+    "type_body_font": "helvetica_n4",
+    "page_width": 1300,
+    "corner_radius": 0,
+    "logo_width": 140,
+    "cart_drawer_enabled": true
+  }
+}

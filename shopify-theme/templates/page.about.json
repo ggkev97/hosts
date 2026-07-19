@@ -1,0 +1,24 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "settings": {
+      }
+    },
+    "story": {
+      "type": "image-with-text",
+      "settings": {
+      }
+    },
+    "newsletter": {
+      "type": "newsletter",
+      "settings": {
+      }
+    }
+  },
+  "order": [
+    "main",
+    "story",
+    "newsletter"
+  ]
+}

@@ -1,0 +1,57 @@
+<section class="search-page page-width section-spacing">
+  <h1 class="search-page__title">{{ 'general.search.search' | t }}</h1>
+
+  <form action="{{ routes.search_url }}" method="get" role="search" class="search-page__form">
+    <input
+      type="search"
+      name="q"
+      value="{{ search.terms | escape }}"
+      placeholder="{{ 'general.search.placeholder' | t }}"
+      class="search-page__input"
+      aria-label="{{ 'general.search.search' | t }}"
+    >
+    <input type="hidden" name="type" value="product">
+    <button type="submit" class="button">{{ 'general.search.search' | t }}</button>
+  </form>
+
+  {%- if search.performed -%}
+    {%- if search.results_count == 0 -%}
+      <p class="search-page__empty">{{ 'general.search.no_results' | t: terms: search.terms }}</p>
+    {%- else -%}
+      <p class="search-page__count">
+        {{ 'general.search.results_with_count' | t: count: search.results_count, terms: search.terms }}
+      </p>
+      {%- paginate search.results by 24 -%}
+        <div class="product-grid product-grid--4">
+          {%- for item in search.results -%}
+            {%- if item.object_type == 'product' -%}
+              {% render 'product-card', card_product: item %}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+        {%- if paginate.pages > 1 -%}
+          <nav class="pagination" role="navigation">
+            {%- if paginate.previous -%}
+              <a href="{{ paginate.previous.url }}" class="pagination__link">{{ 'general.pagination.previous' | t }}</a>
+            {%- endif -%}
+            <span class="pagination__current">
+              {{ 'general.pagination.page' | t: page: paginate.current_page }} / {{ paginate.pages }}
+            </span>
+            {%- if paginate.next -%}
+              <a href="{{ paginate.next.url }}" class="pagination__link">{{ 'general.pagination.next' | t }}</a>
+            {%- endif -%}
+          </nav>
+        {%- endif -%}
+      {%- endpaginate -%}
+    {%- endif -%}
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Search page",
+  "settings": [
+
+  ]
+}
+{% endschema %}

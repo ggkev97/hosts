@@ -1,0 +1,24 @@
+<article class="article page-width page-width--narrow section-spacing">
+  <h1 class="article__title">{{ article.title }}</h1>
+  <p class="article__meta">{{ article.published_at | date: '%B %d, %Y' }}</p>
+  {%- if article.image -%}
+    <img
+      class="article__image"
+      loading="eager"
+      src="{{ article.image | image_url: width: 1400 }}"
+      alt="{{ article.image.alt | escape }}"
+      width="{{ article.image.width }}"
+      height="{{ article.image.height }}"
+    >
+  {%- endif -%}
+  <div class="rte">{{ article.content }}</div>
+</article>
+
+{% schema %}
+{
+  "name": "Article",
+  "settings": [
+
+  ]
+}
+{% endschema %}

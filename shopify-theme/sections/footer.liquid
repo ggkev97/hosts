@@ -1,0 +1,94 @@
+<footer class="footer">
+  <div class="page-width footer__inner">
+    <div class="footer__block footer__block--brand">
+      <span class="footer__brand">{{ shop.name }}</span>
+      {%- if section.settings.text != blank -%}
+        <div class="footer__text rte">{{ section.settings.text }}</div>
+      {%- endif -%}
+      <ul class="footer__social" role="list">
+        {%- if settings.social_instagram_link != blank -%}
+          <li><a href="{{ settings.social_instagram_link }}" target="_blank" rel="noopener">{{ 'general.social.instagram' | t }}</a></li>
+        {%- endif -%}
+        {%- if settings.social_tiktok_link != blank -%}
+          <li><a href="{{ settings.social_tiktok_link }}" target="_blank" rel="noopener">{{ 'general.social.tiktok' | t }}</a></li>
+        {%- endif -%}
+        {%- if settings.social_twitter_link != blank -%}
+          <li><a href="{{ settings.social_twitter_link }}" target="_blank" rel="noopener">{{ 'general.social.twitter' | t }}</a></li>
+        {%- endif -%}
+        {%- if settings.social_facebook_link != blank -%}
+          <li><a href="{{ settings.social_facebook_link }}" target="_blank" rel="noopener">{{ 'general.social.facebook' | t }}</a></li>
+        {%- endif -%}
+      </ul>
+    </div>
+
+    {%- if section.settings.menu != blank -%}
+      <nav class="footer__block">
+        <ul class="footer__menu" role="list">
+          {%- for link in section.settings.menu.links -%}
+            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+
+    {%- if section.settings.show_newsletter -%}
+      <div class="footer__block footer__block--newsletter">
+        <h3 class="footer__heading">{{ section.settings.newsletter_heading }}</h3>
+        {%- form 'customer', class: 'newsletter-form' -%}
+          <input type="hidden" name="contact[tags]" value="newsletter">
+          <div class="newsletter-form__row">
+            <input
+              type="email"
+              name="contact[email]"
+              id="FooterNewsletterEmail"
+              class="newsletter-form__input"
+              value="{{ form.email }}"
+              placeholder="{{ 'newsletter.label' | t }}"
+              required
+            >
+            <button type="submit" class="button">{{ 'newsletter.button_label' | t }}</button>
+          </div>
+          {%- if form.posted_successfully? -%}
+            <p class="newsletter-form__message">{{ 'newsletter.success' | t }}</p>
+          {%- endif -%}
+        {%- endform -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="page-width footer__bottom">
+    <span>&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}</span>
+    <span>{{ powered_by_link }}</span>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": [
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Brand text"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Footer menu",
+      "default": "footer"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_newsletter",
+      "label": "Show newsletter signup",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "Newsletter heading",
+      "default": "Stay in the loop"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,20 @@
+<div class="account page-width section-spacing">
+  <h1>Order {{ order.name }}</h1>
+  <p>{{ order.created_at | date: '%B %d, %Y' }}</p>
+  <table class="cart-table">
+    <thead>
+      <tr><th>Product</th><th>Quantity</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      {%- for line_item in order.line_items -%}
+        <tr>
+          <td>{{ line_item.title }}</td>
+          <td>{{ line_item.quantity }}</td>
+          <td>{{ line_item.final_line_price | money }}</td>
+        </tr>
+      {%- endfor -%}
+    </tbody>
+  </table>
+  <p><strong>Total: {{ order.total_price | money }}</strong></p>
+  <p><a href="{{ routes.account_url }}">Back to account</a></p>
+</div>

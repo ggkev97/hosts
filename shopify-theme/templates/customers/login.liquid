@@ -1,0 +1,13 @@
+<div class="account page-width page-width--narrow section-spacing">
+  <h1>Log in</h1>
+  {%- form 'customer_login' -%}
+    {{ form.errors | default_errors }}
+    <label for="CustomerEmail">Email</label>
+    <input type="email" name="customer[email]" id="CustomerEmail" autocomplete="email" required>
+    <label for="CustomerPassword">Password</label>
+    <input type="password" name="customer[password]" id="CustomerPassword" autocomplete="current-password" required>
+    <button type="submit" class="button">Log in</button>
+    <p><a href="{{ routes.account_recover_url }}">Forgot your password?</a></p>
+    <p><a href="{{ routes.account_register_url }}">Create account</a></p>
+  {%- endform -%}
+</div>

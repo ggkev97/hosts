@@ -19,12 +19,18 @@
       "type": "newsletter",
       "settings": {
       }
+    },
+    "lookbook": {
+      "type": "lookbook",
+      "settings": {
+      }
     }
   },
   "order": [
     "hero",
     "featured",
     "story",
+    "lookbook",
     "newsletter"
   ]
 }

@@ -30,6 +30,12 @@
       },
       {
         "type": "color",
+        "id": "color_crimson",
+        "label": "Crimson (sale, urgency)",
+        "default": "#a4161a"
+      },
+      {
+        "type": "color",
         "id": "color_accent",
         "label": "Accent (buttons)",
         "default": "#f5f5f2"

@@ -7,6 +7,16 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   margin: 0;
   font-family: var(--font-body);
@@ -373,6 +383,16 @@ textarea {
   object-fit: cover;
 }
 
+.hero__web {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 340px;
+  opacity: 0.14;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .hero--gradient {
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 40%),
@@ -527,6 +547,11 @@ textarea {
   text-transform: uppercase;
 }
 
+.product-card__badge--soon {
+  background: var(--color-crimson);
+  color: #fff;
+}
+
 .product-card__title {
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -553,7 +578,7 @@ textarea {
 }
 
 .price--on-sale .price__sale {
-  color: #b42318;
+  color: var(--color-crimson);
 }
 
 .price__badge {
@@ -561,8 +586,13 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.1rem 0.5rem;
-  background: #b42318;
+  background: var(--color-crimson);
   color: #fff;
+}
+
+.price--tba {
+  color: var(--color-muted);
+  letter-spacing: 0.05em;
 }
 
 /* ------------------------------------------------------------------
@@ -1136,4 +1166,157 @@ textarea {
 .account__address {
   padding: 1rem 0;
   border-bottom: 1px solid var(--color-border);
+}
+
+/* ------------------------------------------------------------------
+   Lookbook
+------------------------------------------------------------------ */
+.lookbook__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 750px) {
+  .lookbook__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+.lookbook__item {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.lookbook__item--wide {
+  grid-column: span 2;
+}
+
+.lookbook__item img,
+.lookbook__item svg,
+.lookbook__placeholder {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.lookbook__item--wide img {
+  aspect-ratio: 8 / 5;
+}
+
+.lookbook__item:hover img {
+  transform: scale(1.03);
+}
+
+.lookbook__caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem 1rem 0.75rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+}
+
+/* ------------------------------------------------------------------
+   Password / pre-launch page
+------------------------------------------------------------------ */
+.password-page {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem 1.25rem;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.05), transparent 45%),
+    linear-gradient(180deg, var(--color-background), var(--color-surface) 60%, var(--color-background));
+}
+
+.password-page__web {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 420px;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.password-page__inner {
+  max-width: 480px;
+  position: relative;
+}
+
+.password-page__title {
+  font-size: clamp(2.2rem, 8vw, 3.6rem);
+  text-transform: uppercase;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.password-page__tagline {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-crimson);
+  margin: 0 0 1.25rem;
+}
+
+.password-page__copy {
+  color: var(--color-muted);
+  margin-bottom: 1.75rem;
+}
+
+.password-page__incentive {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  margin-top: 0.9rem;
+}
+
+.password-page__reveal {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 2.25rem;
+}
+
+/* Subtle entrance animation, motion-safe only */
+@media (prefers-reduced-motion: no-preference) {
+  .hero__content > *,
+  .password-page__inner > * {
+    animation: fade-up 0.6s ease both;
+  }
+
+  .hero__content > *:nth-child(2), .password-page__inner > *:nth-child(2) { animation-delay: 0.08s; }
+  .hero__content > *:nth-child(3), .password-page__inner > *:nth-child(3) { animation-delay: 0.16s; }
+  .hero__content > *:nth-child(4), .password-page__inner > *:nth-child(4) { animation-delay: 0.24s; }
+  .hero__content > *:nth-child(5), .password-page__inner > *:nth-child(5) { animation-delay: 0.32s; }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

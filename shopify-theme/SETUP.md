@@ -1,5 +1,19 @@
 # Store Setup Guide
 
+## Pre-launch mode (recommended for Harasniplah's current stage)
+
+While the store is password-protected (the default before picking a plan), visitors see the
+branded splash in `templates/password.liquid`: brand story, "Get Early Access" email capture,
+and a hidden password entry. That page IS the hype site — you can run it as-is for months,
+collecting waitlist emails, before ever opening the store.
+
+- Waitlist emails land in **Customers** in Shopify admin, tagged `newsletter, prelaunch`.
+- Tag teaser products with `coming-soon` (in the product's Tags field) to show a crimson
+  "Coming Soon" badge, `$XX.XX` price, and a "Notify Me" button instead of Add to cart.
+- Set the hero's drop date in the theme editor to show the countdown.
+- Build the Lookbook: create a page with template `page.lookbook`, then add photos to the
+  Lookbook section in the theme editor.
+
 A step-by-step guide for launching the clothing brand on Shopify with this custom theme ("Wardrobe").
 
 ## 1. Create the Shopify store

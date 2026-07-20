@@ -30,6 +30,18 @@
         <p class="product__vendor">{{ product.vendor }}</p>
       {%- endif -%}
       <h1 class="product__title">{{ product.title }}</h1>
+      {%- assign coming_soon = false -%}
+      {%- if product.tags contains 'coming-soon' -%}{%- assign coming_soon = true -%}{%- endif -%}
+
+      {%- if coming_soon -%}
+        <div class="product__price"><div class="price"><span class="price__regular price--tba">$XX.XX</span></div></div>
+        <a href="{{ routes.root_url }}#newsletter" class="button button--large product__add-button">
+          {{ 'products.product.notify_me' | t }}
+        </a>
+        {%- if product.description != blank -%}
+          <div class="product__description rte">{{ product.description }}</div>
+        {%- endif -%}
+      {%- else -%}
       <div class="product__price" data-price-wrapper>
         {% render 'price', variant: product.selected_or_first_available_variant %}
       </div>
@@ -98,6 +110,7 @@
 
       {%- if product.description != blank -%}
         <div class="product__description rte">{{ product.description }}</div>
+      {%- endif -%}
       {%- endif -%}
     </div>
   </div>

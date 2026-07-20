@@ -20,6 +20,8 @@
       <meta name="description" content="{{ page_description | escape }}">
     {% endif %}
 
+    {% render 'meta-tags' %}
+
     {{ content_for_header }}
 
     {%- liquid
@@ -48,6 +50,7 @@
         --font-body: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
         {%- endif -%}
         --color-surface: {{ settings.color_surface }};
+        --color-crimson: {{ settings.color_crimson | default: '#a4161a' }};
         --color-text: {{ settings.color_text }};
         --color-background: {{ settings.color_background }};
         --color-accent: {{ settings.color_accent }};

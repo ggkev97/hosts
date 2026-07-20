@@ -30,11 +30,17 @@
       {%- else -%}
         {{ 'product-1' | placeholder_svg_tag: 'product-card__placeholder' }}
       {%- endif -%}
-      {%- unless card_product.available -%}
+      {%- if card_product.tags contains 'coming-soon' -%}
+        <span class="product-card__badge product-card__badge--soon">{{ 'products.product.coming_soon' | t }}</span>
+      {%- elsif card_product.available == false -%}
         <span class="product-card__badge">{{ 'products.product.sold_out' | t }}</span>
-      {%- endunless -%}
+      {%- endif -%}
     </div>
     <h3 class="product-card__title">{{ card_product.title }}</h3>
-    {% render 'price', product: card_product %}
+    {%- if card_product.tags contains 'coming-soon' -%}
+      <div class="price"><span class="price__regular price--tba">$XX.XX</span></div>
+    {%- else -%}
+      {% render 'price', product: card_product %}
+    {%- endif -%}
   </a>
 </div>

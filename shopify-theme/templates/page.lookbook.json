@@ -1,0 +1,18 @@
+{
+  "sections": {
+    "main": {
+      "type": "lookbook",
+      "settings": {
+      }
+    },
+    "newsletter": {
+      "type": "newsletter",
+      "settings": {
+      }
+    }
+  },
+  "order": [
+    "main",
+    "newsletter"
+  ]
+}

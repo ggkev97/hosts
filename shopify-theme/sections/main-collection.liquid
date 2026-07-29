@@ -1,0 +1,84 @@
+<section class="collection page-width section-spacing">
+  <div class="collection__header">
+    <h1 class="collection__title">{{ collection.title }}</h1>
+    {%- if collection.description != blank -%}
+      <div class="collection__description rte">{{ collection.description }}</div>
+    {%- endif -%}
+  </div>
+
+  <div class="collection__toolbar">
+    <span class="collection__count">
+      {{ 'collections.general.product_count' | t: count: collection.products_count }}
+    </span>
+    {%- if section.settings.enable_sorting -%}
+      <form class="collection__sort" data-sort-form>
+        <label for="SortBy" class="visually-hidden">{{ 'collections.general.sort_by' | t }}</label>
+        <select name="sort_by" id="SortBy" data-sort-select>
+          {%- for option in collection.sort_options -%}
+            <option value="{{ option.value }}" {% if option.value == collection.sort_by %}selected{% endif %}>
+              {{ option.name }}
+            </option>
+          {%- endfor -%}
+        </select>
+      </form>
+    {%- endif -%}
+  </div>
+
+  {%- paginate collection.products by section.settings.products_per_page -%}
+    {%- if collection.products.size > 0 -%}
+      <div class="product-grid product-grid--{{ section.settings.columns }}">
+        {%- for product in collection.products -%}
+          {% render 'product-card', card_product: product %}
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      <p class="collection__empty">{{ 'collections.general.no_products' | t }}</p>
+    {%- endif -%}
+
+    {%- if paginate.pages > 1 -%}
+      <nav class="pagination" role="navigation">
+        {%- if paginate.previous -%}
+          <a href="{{ paginate.previous.url }}" class="pagination__link">{{ 'general.pagination.previous' | t }}</a>
+        {%- endif -%}
+        <span class="pagination__current">
+          {{ 'general.pagination.page' | t: page: paginate.current_page }} / {{ paginate.pages }}
+        </span>
+        {%- if paginate.next -%}
+          <a href="{{ paginate.next.url }}" class="pagination__link">{{ 'general.pagination.next' | t }}</a>
+        {%- endif -%}
+      </nav>
+    {%- endif -%}
+  {%- endpaginate -%}
+</section>
+
+{% schema %}
+{
+  "name": "Collection page",
+  "settings": [
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns on desktop",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sorting",
+      "label": "Enable sorting",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

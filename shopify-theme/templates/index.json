@@ -1,0 +1,36 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero",
+      "settings": {
+      }
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+      }
+    },
+    "story": {
+      "type": "image-with-text",
+      "settings": {
+      }
+    },
+    "newsletter": {
+      "type": "newsletter",
+      "settings": {
+      }
+    },
+    "lookbook": {
+      "type": "lookbook",
+      "settings": {
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "featured",
+    "story",
+    "lookbook",
+    "newsletter"
+  ]
+}

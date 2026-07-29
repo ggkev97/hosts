@@ -1,0 +1,59 @@
+<header class="header page-width">
+  <button type="button" class="header__menu-toggle" data-menu-toggle aria-label="{{ 'accessibility.open_menu' | t }}" aria-expanded="false">
+    {% render 'icon', name: 'menu' %}
+  </button>
+
+  <a href="{{ routes.root_url }}" class="header__logo">
+    {%- if settings.logo != blank -%}
+      <img
+        loading="eager"
+        src="{{ settings.logo | image_url: width: 600 }}"
+        alt="{{ shop.name }}"
+        width="{{ settings.logo_width }}"
+        height="{{ settings.logo_width | divided_by: settings.logo.aspect_ratio | round }}"
+        style="width: {{ settings.logo_width }}px"
+      >
+    {%- else -%}
+      <span class="header__logo-text">{{ shop.name }}</span>
+    {%- endif -%}
+  </a>
+
+  <nav class="header__nav" data-menu-drawer>
+    <ul class="header__menu" role="list">
+      {%- for link in section.settings.menu.links -%}
+        <li>
+          <a href="{{ link.url }}" class="header__menu-link{% if link.current %} header__menu-link--active{% endif %}">
+            {{ link.title }}
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </nav>
+
+  <div class="header__actions">
+    <a href="{{ routes.search_url }}" class="header__icon" aria-label="{{ 'general.search.search' | t }}">
+      {% render 'icon', name: 'search' %}
+    </a>
+    <a href="{{ routes.cart_url }}" class="header__icon header__cart" data-cart-toggle>
+      {% render 'icon', name: 'cart' %}
+      <span class="header__cart-count{% if cart == empty %} hidden{% endif %}" data-cart-count>
+        {{ cart.item_count }}
+      </span>
+      <span class="visually-hidden">{{ 'accessibility.cart_count' | t }}</span>
+    </a>
+  </div>
+</header>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "default": "main-menu"
+    }
+  ]
+}
+{% endschema %}

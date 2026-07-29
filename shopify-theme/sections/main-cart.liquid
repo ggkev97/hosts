@@ -1,0 +1,81 @@
+<section class="cart-page page-width section-spacing">
+  <h1 class="cart-page__title">{{ 'cart.general.title' | t }}</h1>
+
+  {%- if cart == empty -%}
+    <p>{{ 'cart.general.empty' | t }}</p>
+    <a href="{{ routes.all_products_collection_url }}" class="button">
+      {{ 'cart.general.continue_shopping' | t }}
+    </a>
+  {%- else -%}
+    <form action="{{ routes.cart_url }}" method="post" class="cart-page__form">
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th colspan="2"></th>
+            <th>{{ 'cart.general.quantity' | t }}</th>
+            <th class="cart-table__price-col">{{ 'cart.general.subtotal' | t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%- for item in cart.items -%}
+            <tr class="cart-table__row">
+              <td class="cart-table__media">
+                <a href="{{ item.url }}">
+                  {%- if item.image -%}
+                    <img
+                      src="{{ item.image | image_url: width: 200 }}"
+                      alt="{{ item.image.alt | escape }}"
+                      loading="lazy"
+                      width="100"
+                      height="{{ 100 | divided_by: item.image.aspect_ratio | ceil }}"
+                    >
+                  {%- endif -%}
+                </a>
+              </td>
+              <td class="cart-table__details">
+                <a href="{{ item.url }}" class="cart-table__title">{{ item.product.title }}</a>
+                {%- unless item.product.has_only_default_variant -%}
+                  <p class="cart-table__variant">{{ item.variant.title }}</p>
+                {%- endunless -%}
+                <a href="{{ item.url_to_remove }}" class="cart-table__remove">{{ 'cart.general.remove' | t }}</a>
+              </td>
+              <td>
+                <input
+                  class="quantity__input"
+                  type="number"
+                  name="updates[]"
+                  value="{{ item.quantity }}"
+                  min="0"
+                  inputmode="numeric"
+                  aria-label="{{ 'cart.general.quantity' | t }}"
+                >
+              </td>
+              <td class="cart-table__price-col">{{ item.final_line_price | money }}</td>
+            </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+
+      <div class="cart-page__footer">
+        <div class="cart-page__subtotal">
+          <span>{{ 'cart.general.subtotal' | t }}</span>
+          <strong>{{ cart.total_price | money }}</strong>
+        </div>
+        <p class="cart-page__note">{{ 'cart.general.taxes_and_shipping_at_checkout' | t }}</p>
+        <div class="cart-page__actions">
+          <button type="submit" name="update" class="button button--secondary">{{ 'cart.general.update' | t }}</button>
+          <button type="submit" name="checkout" class="button">{{ 'cart.general.checkout' | t }}</button>
+        </div>
+      </div>
+    </form>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Cart page",
+  "settings": [
+
+  ]
+}
+{% endschema %}

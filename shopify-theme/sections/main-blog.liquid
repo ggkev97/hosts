@@ -1,0 +1,44 @@
+<section class="blog page-width section-spacing">
+  <h1>{{ blog.title }}</h1>
+  {%- paginate blog.articles by 12 -%}
+    <div class="blog__grid">
+      {%- for article in blog.articles -%}
+        <article class="blog-card">
+          {%- if article.image -%}
+            <a href="{{ article.url }}">
+              <img
+                src="{{ article.image | image_url: width: 700 }}"
+                alt="{{ article.image.alt | escape }}"
+                loading="lazy"
+                width="{{ article.image.width }}"
+                height="{{ article.image.height }}"
+              >
+            </a>
+          {%- endif -%}
+          <h2 class="blog-card__title"><a href="{{ article.url }}">{{ article.title }}</a></h2>
+          <p class="blog-card__meta">{{ article.published_at | date: '%B %d, %Y' }}</p>
+          <p>{{ article.excerpt_or_content | strip_html | truncate: 140 }}</p>
+        </article>
+      {%- endfor -%}
+    </div>
+    {%- if paginate.pages > 1 -%}
+      <nav class="pagination" role="navigation">
+        {%- if paginate.previous -%}
+          <a href="{{ paginate.previous.url }}" class="pagination__link">{{ 'general.pagination.previous' | t }}</a>
+        {%- endif -%}
+        {%- if paginate.next -%}
+          <a href="{{ paginate.next.url }}" class="pagination__link">{{ 'general.pagination.next' | t }}</a>
+        {%- endif -%}
+      </nav>
+    {%- endif -%}
+  {%- endpaginate -%}
+</section>
+
+{% schema %}
+{
+  "name": "Blog",
+  "settings": [
+
+  ]
+}
+{% endschema %}

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="{{ settings.color_background }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {%- if settings.favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+    {%- endif -%}
+
+    <title>
+      {{ page_title }}
+      {%- if current_page != 1 %} &ndash; {{ 'general.pagination.page' | t: page: current_page }}{% endif -%}
+      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+    </title>
+
+    {% if page_description %}
+      <meta name="description" content="{{ page_description | escape }}">
+    {% endif %}
+
+    {% render 'meta-tags' %}
+
+    {{ content_for_header }}
+
+    {%- liquid
+      assign body_font_bold = settings.type_body_font | font_modify: 'weight', 'bold'
+      assign body_font_italic = settings.type_body_font | font_modify: 'style', 'italic'
+    -%}
+
+    {%- if settings.use_brand_fonts -%}
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    {%- endif -%}
+
+    <style>
+      {{ settings.type_header_font | font_face: font_display: 'swap' }}
+      {{ settings.type_body_font | font_face: font_display: 'swap' }}
+      {{ body_font_bold | font_face: font_display: 'swap' }}
+      {{ body_font_italic | font_face: font_display: 'swap' }}
+
+      :root {
+        {%- if settings.use_brand_fonts -%}
+        --font-heading: 'Cinzel Decorative', serif;
+        --font-body: 'Inter', sans-serif;
+        {%- else -%}
+        --font-heading: {{ settings.type_header_font.family }}, {{ settings.type_header_font.fallback_families }};
+        --font-body: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+        {%- endif -%}
+        --color-surface: {{ settings.color_surface }};
+        --color-crimson: {{ settings.color_crimson | default: '#a4161a' }};
+        --color-text: {{ settings.color_text }};
+        --color-background: {{ settings.color_background }};
+        --color-accent: {{ settings.color_accent }};
+        --color-accent-contrast: {{ settings.color_accent_contrast }};
+        --color-border: {{ settings.color_text | color_modify: 'alpha', 0.15 }};
+        --color-muted: {{ settings.color_text | color_modify: 'alpha', 0.65 }};
+        --page-width: {{ settings.page_width }}px;
+        --radius: {{ settings.corner_radius }}px;
+      }
+    </style>
+
+    {{ 'base.css' | asset_url | stylesheet_tag }}
+
+    <script>
+      window.themeMoneyFormat = {{ shop.money_format | json }};
+      window.themeSettings = {
+        cartDrawerEnabled: {{ settings.cart_drawer_enabled | json }}
+      };
+      window.themeRoutes = {
+        cart: {{ routes.cart_url | json }},
+        allProducts: {{ routes.all_products_collection_url | json }}
+      };
+      window.themeStrings = {
+        addToCart: {{ 'products.product.add_to_cart' | t | json }},
+        soldOut: {{ 'products.product.sold_out' | t | json }},
+        unavailable: {{ 'products.product.unavailable' | t | json }},
+        cartEmpty: {{ 'cart.general.empty' | t | json }},
+        continueShopping: {{ 'cart.general.continue_shopping' | t | json }},
+        subtotal: {{ 'cart.general.subtotal' | t | json }},
+        taxesNote: {{ 'cart.general.taxes_and_shipping_at_checkout' | t | json }},
+        cartTitle: {{ 'cart.general.title' | t | json }},
+        checkout: {{ 'cart.general.checkout' | t | json }},
+        remove: {{ 'cart.general.remove' | t | json }}
+      };
+    </script>
+    <script src="{{ 'theme.js' | asset_url }}" defer></script>
+  </head>
+
+  <body class="template-{{ request.page_type | handle }}">
+    <a class="skip-to-content visually-hidden" href="#MainContent">
+      {{ 'accessibility.skip_to_content' | t }}
+    </a>
+
+    {% sections 'header-group' %}
+
+    <main id="MainContent" role="main">
+      {{ content_for_layout }}
+    </main>
+
+    {% sections 'footer-group' %}
+
+    {% render 'cart-drawer' %}
+  </body>
+</html>

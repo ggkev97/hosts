@@ -1,0 +1,46 @@
+{%- comment -%}
+  Renders a product card for grids.
+  Usage: {% render 'product-card', card_product: product %}
+{%- endcomment -%}
+<div class="product-card">
+  <a href="{{ card_product.url }}" class="product-card__link">
+    <div class="product-card__media">
+      {%- if card_product.featured_media -%}
+        <img
+          srcset="{{ card_product.featured_media | image_url: width: 360 }} 360w,
+                  {{ card_product.featured_media | image_url: width: 540 }} 540w,
+                  {{ card_product.featured_media | image_url: width: 720 }} 720w"
+          src="{{ card_product.featured_media | image_url: width: 540 }}"
+          sizes="(min-width: 990px) 25vw, 50vw"
+          alt="{{ card_product.featured_media.alt | escape }}"
+          loading="lazy"
+          width="{{ card_product.featured_media.width }}"
+          height="{{ card_product.featured_media.height }}"
+        >
+        {%- if card_product.media[1] -%}
+          <img
+            class="product-card__media-hover"
+            src="{{ card_product.media[1] | image_url: width: 540 }}"
+            alt=""
+            loading="lazy"
+            width="{{ card_product.media[1].width }}"
+            height="{{ card_product.media[1].height }}"
+          >
+        {%- endif -%}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'product-card__placeholder' }}
+      {%- endif -%}
+      {%- if card_product.tags contains 'coming-soon' -%}
+        <span class="product-card__badge product-card__badge--soon">{{ 'products.product.coming_soon' | t }}</span>
+      {%- elsif card_product.available == false -%}
+        <span class="product-card__badge">{{ 'products.product.sold_out' | t }}</span>
+      {%- endif -%}
+    </div>
+    <h3 class="product-card__title">{{ card_product.title }}</h3>
+    {%- if card_product.tags contains 'coming-soon' -%}
+      <div class="price"><span class="price__regular price--tba">$XX.XX</span></div>
+    {%- else -%}
+      {% render 'price', product: card_product %}
+    {%- endif -%}
+  </a>
+</div>

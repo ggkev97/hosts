@@ -1,0 +1,30 @@
+<section class="list-collections page-width section-spacing">
+  <h1>Collections</h1>
+  <div class="product-grid product-grid--3">
+    {%- for collection in collections -%}
+      <a href="{{ collection.url }}" class="collection-card">
+        {%- if collection.featured_image -%}
+          <img
+            src="{{ collection.featured_image | image_url: width: 700 }}"
+            alt="{{ collection.featured_image.alt | escape }}"
+            loading="lazy"
+            width="{{ collection.featured_image.width }}"
+            height="{{ collection.featured_image.height }}"
+          >
+        {%- else -%}
+          {{ 'collection-1' | placeholder_svg_tag: 'collection-card__placeholder' }}
+        {%- endif -%}
+        <h2 class="collection-card__title">{{ collection.title }}</h2>
+      </a>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Collections list",
+  "settings": [
+
+  ]
+}
+{% endschema %}

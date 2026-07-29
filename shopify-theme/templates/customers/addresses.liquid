@@ -1,0 +1,33 @@
+<div class="account page-width page-width--narrow section-spacing">
+  <h1>Addresses</h1>
+
+  {%- form 'customer_address', customer.new_address -%}
+    <h2>Add address</h2>
+    <label for="AddressFirstName">First name</label>
+    <input type="text" id="AddressFirstName" name="address[first_name]" autocomplete="given-name">
+    <label for="AddressLastName">Last name</label>
+    <input type="text" id="AddressLastName" name="address[last_name]" autocomplete="family-name">
+    <label for="AddressAddress1">Address</label>
+    <input type="text" id="AddressAddress1" name="address[address1]" autocomplete="address-line1">
+    <label for="AddressCity">City</label>
+    <input type="text" id="AddressCity" name="address[city]" autocomplete="address-level2">
+    <label for="AddressCountry">Country/region</label>
+    <select id="AddressCountry" name="address[country]" data-default="{{ customer.default_address.country }}">
+      {{ all_country_option_tags }}
+    </select>
+    <label for="AddressZip">Postal/ZIP code</label>
+    <input type="text" id="AddressZip" name="address[zip]" autocomplete="postal-code">
+    <button type="submit" class="button">Save</button>
+  {%- endform -%}
+
+  <h2>Saved addresses</h2>
+  {%- for address in customer.addresses -%}
+    <div class="account__address">
+      {{ address | format_address }}
+    </div>
+  {%- else -%}
+    <p>No saved addresses.</p>
+  {%- endfor -%}
+
+  <p><a href="{{ routes.account_url }}">Back to account</a></p>
+</div>

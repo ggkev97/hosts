@@ -1,0 +1,135 @@
+<section class="product page-width section-spacing" data-product-section>
+  <div class="product__grid">
+    <div class="product__media-list">
+      {%- for media in product.media -%}
+        <div class="product__media{% if forloop.first %} product__media--active{% endif %}" data-media-id="{{ media.id }}">
+          {%- case media.media_type -%}
+            {%- when 'image' -%}
+              <img
+                src="{{ media | image_url: width: 1100 }}"
+                srcset="{{ media | image_url: width: 550 }} 550w,
+                        {{ media | image_url: width: 1100 }} 1100w,
+                        {{ media | image_url: width: 1600 }} 1600w"
+                sizes="(min-width: 990px) 55vw, 100vw"
+                alt="{{ media.alt | escape }}"
+                width="{{ media.width }}"
+                height="{{ media.height }}"
+                {% if forloop.first %}loading="eager"{% else %}loading="lazy"{% endif %}
+              >
+            {%- when 'video', 'external_video' -%}
+              {{ media | media_tag }}
+          {%- endcase -%}
+        </div>
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'product__media-placeholder' }}
+      {%- endfor -%}
+    </div>
+
+    <div class="product__info">
+      {%- if section.settings.show_vendor and product.vendor != blank -%}
+        <p class="product__vendor">{{ product.vendor }}</p>
+      {%- endif -%}
+      <h1 class="product__title">{{ product.title }}</h1>
+      {%- assign coming_soon = false -%}
+      {%- if product.tags contains 'coming-soon' -%}{%- assign coming_soon = true -%}{%- endif -%}
+
+      {%- if coming_soon -%}
+        <div class="product__price"><div class="price"><span class="price__regular price--tba">$XX.XX</span></div></div>
+        <a href="{{ routes.root_url }}#newsletter" class="button button--large product__add-button">
+          {{ 'products.product.notify_me' | t }}
+        </a>
+        {%- if product.description != blank -%}
+          <div class="product__description rte">{{ product.description }}</div>
+        {%- endif -%}
+      {%- else -%}
+      <div class="product__price" data-price-wrapper>
+        {% render 'price', variant: product.selected_or_first_available_variant %}
+      </div>
+
+      {%- form 'product', product, data-product-form: '' -%}
+        {%- unless product.has_only_default_variant -%}
+          {%- for option in product.options_with_values -%}
+            <fieldset class="product__option">
+              <legend class="product__option-label">{{ option.name }}</legend>
+              <div class="product__option-values">
+                {%- for value in option.values -%}
+                  <input
+                    type="radio"
+                    id="Option-{{ section.id }}-{{ option.position }}-{{ forloop.index }}"
+                    name="options[{{ option.name | escape }}]"
+                    value="{{ value | escape }}"
+                    {% if option.selected_value == value %}checked{% endif %}
+                    data-option-input
+                  >
+                  <label for="Option-{{ section.id }}-{{ option.position }}-{{ forloop.index }}">
+                    {{ value }}
+                  </label>
+                {%- endfor -%}
+              </div>
+            </fieldset>
+          {%- endfor -%}
+        {%- endunless -%}
+
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" data-variant-id>
+
+        <div class="product__quantity">
+          <label class="product__option-label" for="Quantity-{{ section.id }}">
+            {{ 'products.product.quantity' | t }}
+          </label>
+          <div class="quantity">
+            <button type="button" class="quantity__button" data-qty-change="-1" aria-label="&minus;">&minus;</button>
+            <input
+              class="quantity__input"
+              type="number"
+              name="quantity"
+              id="Quantity-{{ section.id }}"
+              value="1"
+              min="1"
+              inputmode="numeric"
+            >
+            <button type="button" class="quantity__button" data-qty-change="1" aria-label="+">+</button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          name="add"
+          class="button button--large product__add-button"
+          data-add-to-cart
+          {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %}
+        >
+          <span data-add-to-cart-text>
+            {%- if product.selected_or_first_available_variant.available -%}
+              {{ 'products.product.add_to_cart' | t }}
+            {%- else -%}
+              {{ 'products.product.sold_out' | t }}
+            {%- endif -%}
+          </span>
+        </button>
+      {%- endform -%}
+
+      {%- if product.description != blank -%}
+        <div class="product__description rte">{{ product.description }}</div>
+      {%- endif -%}
+      {%- endif -%}
+    </div>
+  </div>
+
+  <script type="application/json" data-product-json>
+    {{ product | json }}
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Product page",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": false
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,95 @@
+<section class="image-with-text page-width section-spacing">
+  <div class="image-with-text__grid{% if section.settings.layout == 'text_first' %} image-with-text__grid--reverse{% endif %}">
+    <div class="image-with-text__media">
+      {%- if section.settings.image != blank -%}
+        <img
+          src="{{ section.settings.image | image_url: width: 1100 }}"
+          alt="{{ section.settings.image.alt | escape }}"
+          loading="lazy"
+          width="{{ section.settings.image.width }}"
+          height="{{ section.settings.image.height }}"
+        >
+      {%- else -%}
+        {{ 'image' | placeholder_svg_tag: 'image-with-text__placeholder' }}
+      {%- endif -%}
+    </div>
+    <div class="image-with-text__content">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+      {%- endif -%}
+      {%- if section.settings.heading != blank -%}
+        <h2 class="section-heading">{{ section.settings.heading }}</h2>
+      {%- endif -%}
+      {%- if section.settings.text != blank -%}
+        <div class="rte">{{ section.settings.text }}</div>
+      {%- endif -%}
+      {%- if section.settings.button_label != blank -%}
+        <a href="{{ section.settings.button_link }}" class="button button--secondary">
+          {{ section.settings.button_label }}
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Image with text",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "The Brand"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Born from the Shadows"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Harasniplah is an emerging activewear brand for those who train differently. Born from the shadows with a signature spider motif, we create premium hoodies, activewear, hats, and accessories that blend performance with unapologetic edge.</p><p>We are not here to blend in. Our first drop — the Men's Collection — arrives in 2026. Pre-order access coming soon.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "options": [
+        {
+          "value": "image_first",
+          "label": "Image first"
+        },
+        {
+          "value": "text_first",
+          "label": "Text first"
+        }
+      ],
+      "default": "image_first"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image with text"
+    }
+  ]
+}
+{% endschema %}

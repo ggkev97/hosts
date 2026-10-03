@@ -92,3 +92,4 @@ def test_web_defaults_are_loopback_only():
     cfg = load_config(ROOT / "config.yaml")
     assert cfg.web.host == "127.0.0.1" and cfg.web.auth_token is None
     assert cfg.web.blur_thumbnails is True and cfg.web.run_scheduler is False
+    assert cfg.web.secure_cookies is False

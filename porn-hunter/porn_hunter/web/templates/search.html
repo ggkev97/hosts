@@ -44,6 +44,7 @@
         <div class="actions">
           <button class="btn" data-action="queue" data-id="{{ r.id }}">Queue</button>
           <button class="btn primary" data-action="download" data-id="{{ r.id }}">Download</button>
+          {% if r.status == 'downloaded' %}<a class="btn primary" href="{{ url_for('watch', vid=r.id) }}">Watch</a>{% endif %}
           {% set href = r.url|safe_url %}
           {% if href %}<a class="btn ghost" href="{{ href }}" target="_blank" rel="noopener noreferrer">Source ↗</a>{% endif %}
         </div>

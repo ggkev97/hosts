@@ -121,6 +121,11 @@
   };
 
   document.addEventListener("click", async (event) => {
+    // Blurred thumbnails: tap one to reveal/hide it (there is no hover on a phone).
+    const thumb = event.target.closest(".thumb, img.mini");
+    if (thumb && document.body.classList.contains("blur")) {
+      (thumb.closest(".card") || thumb).classList.toggle("reveal");
+    }
     const btn = event.target.closest("[data-action]");
     if (!btn || !handlers[btn.dataset.action]) return;
     if (btn.disabled) return;

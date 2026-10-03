@@ -125,6 +125,7 @@ class WebConfig:
     blur_thumbnails: bool = True     # blur until hovered/toggled (shared screens)
     run_scheduler: bool = False      # also run the cron scheduler inside the web process
     results_per_page: int = 24
+    secure_cookies: bool = False     # set true when served over HTTPS (e.g. Tailscale serve, a TLS proxy)
 
 
 def _default_sites() -> dict:

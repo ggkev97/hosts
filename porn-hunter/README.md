@@ -170,6 +170,44 @@ pages other than search still work and the log says why.
   no inline script or style, scraped titles are HTML-escaped, and only `http(s)` source links are rendered.
 - It is a single-user tool served by Werkzeug's threaded server, not a hardened multi-user service.
 
+#### Using it from your iPhone
+
+The app can't run *on* the phone (it needs the CLIP model, ffmpeg and disk space). It runs on your computer (or a
+home server), and the iPhone uses it in Safari. The computer has to stay on and awake (on a Mac, `caffeinate -i`
+helps). Pick one way to connect:
+
+**A. Tailscale (recommended): private, encrypted, works away from home.**
+
+1. Install [Tailscale](https://tailscale.com/) on the computer and the iPhone and sign in to the same account.
+2. Choose an access token (12+ characters) and start the app on loopback:
+   ```bash
+   export PORN_HUNTER_WEB_TOKEN='a-long-random-token'
+   python -m porn_hunter web --scheduler        # still only listens on 127.0.0.1
+   ```
+3. Publish it to your tailnet over HTTPS (check `tailscale serve --help` for the syntax on your version; recently
+   it is `tailscale serve --bg 8765`). Tailscale prints a URL like `https://<computer>.<tailnet>.ts.net`.
+4. Set `web.secure_cookies: true` in `config.yaml` (you are now on HTTPS) and restart the app.
+5. Open that URL on the iPhone and log in with the token.
+
+**B. Same Wi-Fi only (simplest, but unencrypted).**
+
+```bash
+export PORN_HUNTER_WEB_TOKEN='a-long-random-token'
+python -m porn_hunter web --host 0.0.0.0
+```
+
+It prints `on your phone (same Wi-Fi) open http://192.168.x.x:8765/`. Open that in Safari and log in. Anyone on
+that network can see the traffic and the token, so use this only on a network you trust, and never port-forward it
+to the internet.
+
+**Add it to your Home Screen.** In Safari tap Share, then *Add to Home Screen*. It opens full-screen like an app
+(with an icon). iOS keeps a separate login for the Home Screen app, so you log in once more.
+
+On the phone, tap a blurred thumbnail to reveal it, tap again to hide it, and use **Blur** in the header to
+turn blurring off. The **Watch** button (shown for downloaded videos) streams the file from your computer. iPhone
+Safari plays **H.264/AAC `.mp4`** files, which is what `download.format: mp4` prefers, and the Watch page warns when a
+file is another container. Some sources only offer other codecs (e.g. VP9/AV1), which may not play on the phone.
+
 ### Other commands
 
 ```bash
@@ -205,7 +243,7 @@ the config file's directory.
 | `search`    | default `top_k` and `min_score`                                                                           |
 | `download`  | **quality, format**, filename template, delays, retries, backoff, attempts, per-run cap, rate limit, cookies file, raw yt-dlp options |
 | `scheduler` | **cron expressions**, run-on-start flags, `auto_queue`                                                    |
-| `web`       | web UI host/port, auth token, allowed hosts, thumbnail blur, in-process scheduler, results per page       |
+| `web`       | web UI host/port, auth token, allowed hosts, HTTPS cookies, thumbnail blur, in-process scheduler, results per page |
 
 ## How it is stored
 

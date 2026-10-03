@@ -11,6 +11,7 @@
   </div>
   <div class="row-actions">
     {% if kind == 'queued' %}<button class="btn" data-action="remove" data-id="{{ v.id }}">Remove</button>{% endif %}
+    {% if kind == 'downloaded' %}<a class="btn primary" href="{{ url_for('watch', vid=v.id) }}">Watch</a>{% endif %}
     {% if kind == 'failed' %}<button class="btn" data-action="retry" data-id="{{ v.id }}">Retry</button>{% endif %}
   </div>
 </li>

@@ -8,6 +8,7 @@ import logging
 import os
 import secrets
 import signal
+import socket
 import threading
 import time
 from datetime import datetime, timedelta
@@ -68,7 +69,8 @@ def create_app(hunter: App, token: str | None = None, jobs: JobManager | None = 
     flask_app.config.update(
         SECRET_KEY=(hmac.new(token.encode(), b"porn-hunter-session", hashlib.sha256).hexdigest()
                     if token else secrets.token_hex(32)),
-        SESSION_COOKIE_SAMESITE="Strict", SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_NAME="ph_session",
+        SESSION_COOKIE_SECURE=web.secure_cookies, SESSION_COOKIE_SAMESITE="Strict",
+        SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_NAME="ph_session",
         PERMANENT_SESSION_LIFETIME=timedelta(days=7), MAX_CONTENT_LENGTH=64 * 1024)
     flask_app.extensions["jobs"] = jobs
     flask_app.jinja_env.filters["safe_url"] = safe_url
@@ -110,12 +112,13 @@ def create_app(hunter: App, token: str | None = None, jobs: JobManager | None = 
     @flask_app.after_request
     def headers(resp):
         resp.headers["Content-Security-Policy"] = (
-            "default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; "
+            "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'self'; script-src 'self'; "
+            "connect-src 'self'; manifest-src 'self'; "
             "form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["X-Frame-Options"] = "DENY"
         resp.headers["Referrer-Policy"] = "no-referrer"
-        if request.endpoint not in ("thumb", "static"):
+        if request.endpoint not in ("thumb", "static", "media"):
             resp.headers["Cache-Control"] = "no-store"
         return resp
 
@@ -239,6 +242,27 @@ def create_app(hunter: App, token: str | None = None, jobs: JobManager | None = 
             abort(404)
         return send_file(path, mimetype="image/jpeg", max_age=86400)
 
+    def downloaded_file(vid: int):
+        """The video's downloaded file, only if it really lives inside the output directory."""
+        video = hunter.store.get(vid)
+        if video is None or video.dl_status != "downloaded" or not video.dl_path:
+            abort(404)
+        path, root = Path(video.dl_path).resolve(), cfg.path("output_dir").resolve()
+        if root not in path.parents or not path.is_file():
+            abort(404)
+        return video, path
+
+    @flask_app.get("/watch/<int:vid>")
+    def watch(vid):
+        video, path = downloaded_file(vid)
+        return render_template("watch.html", video=video, ext=path.suffix.lower())
+
+    @flask_app.get("/media/<int:vid>")
+    def media(vid):
+        """Stream a downloaded video. Range requests are supported (iOS Safari requires them)."""
+        _, path = downloaded_file(vid)
+        return send_file(path, conditional=True, max_age=0)
+
     # ---- JSON API ---------------------------------------------------------------------------
     @flask_app.get("/api/search")
     def api_search():
@@ -304,6 +328,22 @@ def create_app(hunter: App, token: str | None = None, jobs: JobManager | None = 
     return flask_app
 
 
+def lan_urls(port: int) -> list[str]:
+    """Best-effort URL(s) other devices on the local network can use to reach this machine."""
+    urls = []
+    for target in ("10.255.255.255", "192.168.255.255"):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.connect((target, 1))                  # no packet is sent; just selects a route
+                ip = sock.getsockname()[0]
+        except OSError:
+            continue
+        url = f"http://{ip}:{port}/"
+        if not ip.startswith("127.") and url not in urls:
+            urls.append(url)
+    return urls
+
+
 def warm_up(hunter: App, background: bool = False) -> threading.Thread | None:
     """Build everything up front so the first search isn't slow. A model that can't load (e.g.
     offline) is not fatal: search reports it, other pages still work. With background=True the
@@ -363,6 +403,9 @@ def serve(hunter: App, host: str | None = None, port: int | None = None, token: 
         signal.signal(signal.SIGTERM, shutdown)
     log.info("web UI on http://%s:%d/ (%s)", host if ":" not in host else f"[{host}]", server.server_port,
              "token required" if token else "no login: loopback only")
+    if host in ("0.0.0.0", "::"):
+        for url in lan_urls(server.server_port):
+            log.info("on your phone (same Wi-Fi) open %s", url)
     if on_ready:
         on_ready(server, stop)
     try:

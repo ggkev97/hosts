@@ -103,3 +103,4 @@ web:
   blur_thumbnails: true             # blur thumbnails until hovered; toggle in the UI
   run_scheduler: false              # true = the web process also runs the cron scheduler below
   results_per_page: 24
+  secure_cookies: false             # true when you reach it over HTTPS (Tailscale serve, reverse proxy)

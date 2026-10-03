@@ -421,3 +421,127 @@ def test_slow_model_load_does_not_block_other_pages(cfg):
         release.set()
         loader.join(10)
     assert h.vindex.ntotal == 0 and h.searcher is not None            # and it finishes loading afterwards
+
+
+# --- phone / iOS support ---------------------------------------------------------------------------
+
+PAYLOAD = bytes(range(256)) * 4            # 1024 bytes, every byte distinguishable
+
+
+def seed_download(hunter, name="red", filename="red.mp4", data=PAYLOAD):
+    out = hunter.cfg.path("output_dir")
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / filename
+    path.write_bytes(data)
+    hunter.store.queue([hunter.ids[name]])
+    hunter.store.mark_downloaded(hunter.ids[name], str(path))
+    return hunter.ids[name], path
+
+
+def test_media_streams_with_range_requests(web, hunter):
+    client, _ = web
+    vid, _ = seed_download(hunter)
+    full = client.get(f"/media/{vid}")
+    assert full.status_code == 200 and full.mimetype == "video/mp4" and full.data == PAYLOAD
+    assert full.headers["Accept-Ranges"] == "bytes"
+    part = client.get(f"/media/{vid}", headers={"Range": "bytes=100-199"})        # what iOS Safari sends
+    assert part.status_code == 206 and part.data == PAYLOAD[100:200]
+    assert part.headers["Content-Range"] == "bytes 100-199/1024"
+    tail = client.get(f"/media/{vid}", headers={"Range": "bytes=1000-"})
+    assert tail.status_code == 206 and tail.data == PAYLOAD[1000:]
+    assert client.get(f"/media/{vid}", headers={"Range": "bytes=5000-6000"}).status_code == 416
+
+
+def test_media_only_serves_downloaded_files_inside_output_dir(web, hunter, tmp_path):
+    client, _ = web
+    red = hunter.ids["red"]
+    assert client.get(f"/media/{red}").status_code == 404                  # not downloaded
+    assert client.get(f"/watch/{red}").status_code == 404
+    secret = tmp_path / "secret.mp4"
+    secret.write_bytes(b"secret")
+    hunter.store.queue([red])
+    hunter.store.mark_downloaded(red, str(secret))                          # recorded path outside the output dir
+    assert client.get(f"/media/{red}").status_code == 404
+    out = hunter.cfg.path("output_dir")
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "link.mp4").symlink_to(secret)
+    hunter.store.mark_downloaded(red, str(out / "link.mp4"))                # symlink escaping the output dir
+    assert client.get(f"/media/{red}").status_code == 404
+    hunter.store.mark_downloaded(red, str(out / "missing.mp4"))
+    assert client.get(f"/media/{red}").status_code == 404
+    assert client.get("/media/99999").status_code == 404
+
+
+def test_watch_page_and_links(web, hunter):
+    client, _ = web
+    vid, _ = seed_download(hunter)
+    html = client.get(f"/watch/{vid}").get_data(as_text=True)
+    assert f'src="/media/{vid}"' in html and "playsinline" in html and "controls" in html
+    assert "javascript:" not in html and "iPhone Safari plays" not in html          # mp4: no codec warning
+    assert f'href="/watch/{vid}"' in client.get("/?q=red").get_data(as_text=True)    # Watch button on the card
+    assert f'href="/watch/{vid}"' in client.get("/queue").get_data(as_text=True)
+    mkv_id, _ = seed_download(hunter, "green", "green.mkv")
+    assert "iPhone Safari plays" in client.get(f"/watch/{mkv_id}").get_data(as_text=True)
+    blue_html = client.get("/?q=blue&k=1").get_data(as_text=True)                  # blue was never downloaded
+    assert "/watch/" not in blue_html
+
+
+def test_media_requires_login_in_token_mode(hunter):
+    client, _ = make_client(hunter, TOKEN)
+    vid, _ = seed_download(hunter)
+    assert client.get(f"/media/{vid}").status_code == 302
+    assert client.get(f"/watch/{vid}").status_code == 302
+    assert client.get(f"/media/{vid}", headers={"Authorization": f"Bearer {TOKEN}"}).status_code == 200
+
+
+def test_home_screen_support_files(web):
+    client, _ = web
+    html = client.get("/").get_data(as_text=True)
+    for needle in ("viewport-fit=cover", 'name="apple-mobile-web-app-capable"', 'rel="apple-touch-icon"',
+                   'rel="manifest"', 'name="theme-color"'):
+        assert needle in html, needle
+    manifest = client.get("/static/manifest.webmanifest")
+    assert manifest.status_code == 200 and manifest.get_json()["display"] == "standalone"
+    for icon in manifest.get_json()["icons"] + [{"src": "/static/apple-touch-icon.png"}]:
+        r = client.get(icon["src"])
+        assert r.status_code == 200 and r.mimetype == "image/png"
+    csp = client.get("/").headers["Content-Security-Policy"]
+    assert "media-src 'self'" in csp and "manifest-src 'self'" in csp and "unsafe-inline" not in csp
+
+
+def test_secure_cookie_flag_follows_config(hunter):
+    client, _ = make_client(hunter, TOKEN)
+    assert "Secure" not in client.get("/login").headers.get("Set-Cookie", "")
+    hunter.cfg.web.secure_cookies = True
+    secure_client, _ = make_client(hunter, TOKEN)
+    cookie = secure_client.get("/login").headers["Set-Cookie"]
+    assert "Secure" in cookie and "HttpOnly" in cookie and "SameSite=Strict" in cookie
+
+
+def test_lan_urls(monkeypatch):
+    from porn_hunter import web as webmod
+
+    class FakeSock:
+        ip = "192.168.1.23"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def connect(self, addr):
+            pass
+
+        def getsockname(self):
+            return (self.ip, 5555)
+
+    monkeypatch.setattr(webmod.socket, "socket", lambda *a, **k: FakeSock())
+    assert webmod.lan_urls(8765) == ["http://192.168.1.23:8765/"]              # de-duplicated across probes
+    FakeSock.ip = "127.0.0.1"
+    assert webmod.lan_urls(8765) == []                                         # loopback is useless to a phone
+
+    def boom(*a, **k):
+        raise OSError("no network")
+    monkeypatch.setattr(webmod.socket, "socket", boom)
+    assert webmod.lan_urls(8765) == []

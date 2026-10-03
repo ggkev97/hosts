@@ -23,7 +23,7 @@ def call_with_retry(
     cap: float,
     retry_on: Tuple[Type[BaseException], ...] = (Exception,),
     delay_for: Callable[[BaseException, int], float | None] | None = None,
-    sleep: Callable[[float], None] = time.sleep,
+    sleep: Callable[[float], None] | None = None,
     describe: str = "operation",
 ):
     """Call fn() up to retries+1 times. Re-raises the last exception.
@@ -31,6 +31,7 @@ def call_with_retry(
     `delay_for(exc, attempt)` may return a custom wait (e.g. Retry-After) or None
     to use the default backoff; a negative value means "do not retry".
     """
+    sleep = sleep or time.sleep  # looked up at call time so tests can patch it
     for attempt in range(retries + 1):
         try:
             return fn()

@@ -1,0 +1,95 @@
+# porn-hunter configuration.
+# Relative paths are resolved against the directory containing this file.
+
+paths:
+  data_dir: data                    # SQLite metadata + FAISS index live here
+  thumbs_dir: data/thumbs           # downloaded thumbnails
+  output_dir: downloads             # where yt-dlp saves videos
+  log_file: logs/porn-hunter.log
+  lock_file: data/.hunter.lock      # prevents overlapping index/download runs
+
+logging:
+  level: INFO                       # DEBUG | INFO | WARNING | ERROR
+  max_bytes: 10485760               # rotate the log file at 10 MiB
+  backup_count: 5
+
+model:
+  name: ViT-B-32
+  pretrained: laion2b_s34b_b79k
+  device: auto                      # auto | cpu | cuda | mps
+  batch_size: 32
+  cache_dir: null                   # where open_clip stores weights (null = default)
+
+http:
+  user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+  timeout: 20                       # seconds per request
+  retries: 3                        # extra attempts per request
+  backoff_base: 2.0                 # delay = base * 2^attempt (+ jitter)
+  backoff_max: 60.0
+  min_delay: 1.0                    # polite random pause between requests ...
+  max_delay: 3.0                    # ... uniformly drawn from [min_delay, max_delay]
+  max_thumb_bytes: 5242880          # refuse thumbnails bigger than 5 MiB
+  proxy: null                       # e.g. http://127.0.0.1:8080
+
+# Search-page endpoints. {query} is URL-encoded, {page} is the page number
+# (starting at `first_page`). Disable a site by setting enabled: false.
+sites:
+  pornhub:
+    enabled: true
+    base_url: https://www.pornhub.com
+    search_url: "https://www.pornhub.com/video/search?search={query}&page={page}"
+    first_page: 1
+    cookies:
+      accessAgeDisclaimerPH: "1"    # age-gate acknowledgement cookie
+  xvideos:
+    enabled: true
+    base_url: https://www.xvideos.com
+    search_url: "https://www.xvideos.com/?k={query}&p={page}"
+    first_page: 0                   # xVideos pages are 0-based
+    cookies: {}
+  xhamster:
+    enabled: true
+    base_url: https://xhamster.com
+    search_url: "https://xhamster.com/search/{query}?page={page}"
+    first_page: 1
+    cookies: {}
+
+index:
+  # Queries used by `index` (with no --query) and by the scheduler.
+  queries:
+    - blonde
+    - brunette
+    - amateur
+  pages_per_query: 2                # search-result pages fetched per site per query
+  max_new_per_run: 500              # stop embedding after this many new videos
+
+search:
+  top_k: 20
+  min_score: 0.0                    # cosine similarity floor (-1..1); CLIP text-image scores are usually 0.15-0.35
+
+download:
+  quality: best                     # best | 1080p | 720p (any NNNp works)
+  format: mp4                       # container: mp4 | mkv | webm
+  filename_template: "%(extractor)s/%(title).150B [%(id)s].%(ext)s"
+  min_delay: 10                     # random pause between downloads (seconds) ...
+  max_delay: 45                     # ... drawn from [min_delay, max_delay]
+  retries: 3                        # in-run attempts per video
+  retry_backoff: 30                 # seconds; doubled on each retry
+  rate_limit_backoff: 300           # extra wait (seconds) when the site answers 429 / "too many requests"
+  max_attempts: 3                   # give up on a queued video after this many failed runs
+  max_per_run: 5                    # videos fetched per scheduled download run
+  limit_rate: null                  # yt-dlp bandwidth cap, e.g. 5M
+  cookies_file: null                # Netscape cookies.txt for yt-dlp, if a site needs login
+  ytdlp_options: {}                 # extra raw yt-dlp options, e.g. {proxy: "http://..."}
+
+scheduler:
+  # Standard 5-field cron expressions, evaluated in local time.
+  index_cron: "0 3 * * *"           # re-index daily at 03:00
+  download_cron: "*/30 * * * *"     # process the download queue every 30 minutes
+  run_index_on_start: false
+  run_download_on_start: false
+  # After each index run, queue the best matches for these searches.
+  auto_queue: []
+  #  - query: "example query"
+  #    top_k: 5
+  #    min_score: 0.25

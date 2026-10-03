@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from pathlib import Path
 
 import faiss
@@ -20,6 +21,7 @@ class VectorIndex:
         self.path = Path(path)
         self.dim = dim
         self.index = index or faiss.IndexIDMap2(faiss.IndexFlatIP(dim))
+        self._lock = threading.RLock()   # FAISS isn't safe for concurrent add + search
 
     @property
     def ntotal(self) -> int:
@@ -29,20 +31,23 @@ class VectorIndex:
         vecs = normalize(vecs)
         if vecs.ndim != 2 or vecs.shape[1] != self.dim:
             raise StoreError(f"expected vectors of dimension {self.dim}, got shape {vecs.shape}")
-        self.index.add_with_ids(vecs, np.asarray(ids, dtype=np.int64))
+        with self._lock:
+            self.index.add_with_ids(vecs, np.asarray(ids, dtype=np.int64))
 
     def search(self, vec: np.ndarray, k: int) -> list[tuple[int, float]]:
-        k = min(k, self.ntotal)
-        if k <= 0:
-            return []
-        scores, ids = self.index.search(normalize(vec.reshape(1, -1)), k)
+        with self._lock:
+            k = min(k, self.ntotal)
+            if k <= 0:
+                return []
+            scores, ids = self.index.search(normalize(vec.reshape(1, -1)), k)
         return [(int(i), float(s)) for i, s in zip(ids[0], scores[0]) if i != -1]
 
     def save(self) -> None:
         """Write atomically so a crash never leaves a truncated index behind."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_suffix(self.path.suffix + ".tmp")
-        faiss.write_index(self.index, str(tmp))
+        with self._lock:
+            faiss.write_index(self.index, str(tmp))
         os.replace(tmp, self.path)
 
     @classmethod

@@ -3,6 +3,7 @@ so the FAISS index can always be rebuilt from it."""
 from __future__ import annotations
 
 import sqlite3
+import threading
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -63,17 +64,38 @@ def now_iso() -> str:
 
 class VideoStore:
     def __init__(self, path: Path | str):
+        """Connections are per-thread (the web server and background jobs share one store).
+        An in-memory database can't be shared that way, so it uses a single connection."""
         self.path = str(path)
-        if self.path != ":memory:":
+        self._local = threading.local()
+        self._shared = None
+        if self.path == ":memory:":
+            self._shared = sqlite3.connect(self.path, check_same_thread=False)
+        else:
             Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         try:
-            self.db = sqlite3.connect(self.path, timeout=30)
             self.db.executescript(SCHEMA)
         except sqlite3.DatabaseError as exc:
             raise StoreError(f"cannot open metadata database {self.path}: {exc}") from exc
 
+    @property
+    def db(self) -> sqlite3.Connection:
+        if self._shared is not None:
+            return self._shared
+        conn = getattr(self._local, "conn", None)
+        if conn is None:
+            try:
+                conn = sqlite3.connect(self.path, timeout=30)
+                conn.execute("PRAGMA journal_mode=WAL")      # readers don't block the writer
+            except sqlite3.DatabaseError as exc:
+                raise StoreError(f"cannot open metadata database {self.path}: {exc}") from exc
+            self._local.conn = conn
+        return conn
+
     def close(self) -> None:
+        """Close this thread's connection."""
         self.db.close()
+        self._local.conn = None
 
     # -- meta -----------------------------------------------------------------
     def get_meta(self, key: str) -> str | None:
@@ -193,6 +215,13 @@ class VideoStore:
                 n += self.db.execute("UPDATE videos SET dl_status='none' WHERE id=? AND dl_status='queued'",
                                      (vid,)).rowcount
             return n
+
+    def list_status(self, status: str, limit: int = 100) -> list[Video]:
+        """Videos in a download status, most recent first (downloads by time, others by id)."""
+        order = "dl_at DESC" if status == "downloaded" else "id DESC"
+        rows = self.db.execute(
+            f"SELECT {COLUMNS} FROM videos WHERE dl_status=? ORDER BY {order} LIMIT ?", (status, limit))
+        return [Video(*r) for r in rows]
 
     def stats(self) -> dict:
         out = {"videos": self.db.execute("SELECT COUNT(*) FROM videos").fetchone()[0],

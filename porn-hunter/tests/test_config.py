@@ -69,6 +69,9 @@ def test_auto_queue_parsed(tmp_path):
     ("sites: {pornhub: {search_url: 'http://x/'}}", "{query}"),
     ("scheduler: {auto_queue: [{top_k: 1}]}", "query is required"),
     ("paths: [1, 2]", "expected a mapping"),
+    ("web: {port: 70000}", "web.port"),
+    ("web: {results_per_page: 0}", "results_per_page"),
+    ("web: {blur: true}", "unknown option"),
 ])
 def test_invalid_configs_rejected(tmp_path, body, needle):
     with pytest.raises(ConfigError, match=needle.replace("{", r"\{").replace("}", r"\}")):
@@ -83,3 +86,9 @@ def test_missing_file(tmp_path):
 def test_bad_yaml(tmp_path):
     with pytest.raises(ConfigError, match="invalid YAML"):
         load_config(write(tmp_path, "a: [unclosed"))
+
+
+def test_web_defaults_are_loopback_only():
+    cfg = load_config(ROOT / "config.yaml")
+    assert cfg.web.host == "127.0.0.1" and cfg.web.auth_token is None
+    assert cfg.web.blur_thumbnails is True and cfg.web.run_scheduler is False

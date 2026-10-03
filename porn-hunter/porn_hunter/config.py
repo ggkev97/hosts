@@ -116,6 +116,17 @@ class SchedulerConfig:
     auto_queue: list = field(default_factory=list)
 
 
+@dataclass
+class WebConfig:
+    host: str = "127.0.0.1"          # loopback only by default; anything else requires a token
+    port: int = 8765
+    auth_token: str | None = None    # or set PORN_HUNTER_WEB_TOKEN; required when host isn't loopback
+    allowed_hosts: list = field(default_factory=list)   # extra Host names accepted (loopback mode)
+    blur_thumbnails: bool = True     # blur until hovered/toggled (shared screens)
+    run_scheduler: bool = False      # also run the cron scheduler inside the web process
+    results_per_page: int = 24
+
+
 def _default_sites() -> dict:
     return {
         "pornhub": SiteConfig(
@@ -148,6 +159,7 @@ class Config:
     search: SearchConfig = field(default_factory=SearchConfig)
     download: DownloadConfig = field(default_factory=DownloadConfig)
     scheduler: SchedulerConfig = field(default_factory=SchedulerConfig)
+    web: WebConfig = field(default_factory=WebConfig)
 
     # Resolved absolute locations, filled in by load_config().
     base_dir: Path = field(default_factory=Path.cwd)
@@ -197,7 +209,7 @@ def _build(cls, data: Any, where: str):
             ok = isinstance(value, dict)
         else:  # Optional[...] defaulting to None
             ok = value is None or isinstance(value, (str, int, float))
-            if value is not None and key in ("cache_dir", "proxy", "limit_rate", "cookies_file"):
+            if value is not None and key in ("cache_dir", "proxy", "limit_rate", "cookies_file", "auth_token"):
                 value = str(value)
         if not ok:
             raise ConfigError(
@@ -232,6 +244,11 @@ def validate(cfg: Config) -> None:
         raise ConfigError("index.pages_per_query and index.max_new_per_run must be >= 1")
     if cfg.search.top_k < 1:
         raise ConfigError("search.top_k must be >= 1")
+    w = cfg.web
+    if not 1 <= w.port <= 65535:
+        raise ConfigError("web.port must be between 1 and 65535")
+    if not 1 <= w.results_per_page <= 200:
+        raise ConfigError("web.results_per_page must be between 1 and 200")
     for name, site in cfg.sites.items():
         if site.enabled and not (site.search_url and "{query}" in site.search_url):
             raise ConfigError(f"sites.{name}.search_url must contain {{query}}")
@@ -256,7 +273,7 @@ def load_config(path: str | Path | None = None) -> Config:
     sections = {
         "paths": PathsConfig, "logging": LoggingConfig, "model": ModelConfig,
         "http": HttpConfig, "index": IndexConfig, "search": SearchConfig,
-        "download": DownloadConfig,
+        "download": DownloadConfig, "web": WebConfig,
     }
     unknown = set(raw) - set(sections) - {"sites", "scheduler"}
     if unknown:

@@ -63,6 +63,11 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("job", choices=["index", "download"])
     ssub.add_parser("next", help="print the next scheduled run times")
 
+    s = sub.add_parser("web", help="serve the browser UI (search, queue, jobs)")
+    s.add_argument("--host", help="bind address (default web.host; non-loopback requires a token)")
+    s.add_argument("--port", type=int, help="port (default web.port)")
+    s.add_argument("--scheduler", action="store_true", help="also run the cron scheduler in this process")
+
     sub.add_parser("stats", help="show index and download-queue statistics")
     sub.add_parser("rebuild", help="rebuild the FAISS index from the metadata database")
     return p
@@ -156,6 +161,12 @@ def cmd_schedule(app: App, args) -> int:
     return 0
 
 
+def cmd_web(app: App, args) -> int:
+    from porn_hunter.web import serve
+    serve(app, args.host, args.port, with_scheduler=True if args.scheduler else None)
+    return 0
+
+
 def cmd_stats(app: App, args) -> int:
     print(json.dumps(app.store.stats(), indent=2))
     return 0
@@ -169,7 +180,7 @@ def cmd_rebuild(app: App, args) -> int:
 
 
 COMMANDS = {"index": cmd_index, "search": cmd_search, "queue": cmd_queue, "download": cmd_download,
-            "schedule": cmd_schedule, "stats": cmd_stats, "rebuild": cmd_rebuild}
+            "schedule": cmd_schedule, "web": cmd_web, "stats": cmd_stats, "rebuild": cmd_rebuild}
 
 
 EX_TEMPFAIL = 75

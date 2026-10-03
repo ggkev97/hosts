@@ -93,3 +93,13 @@ scheduler:
   #  - query: "example query"
   #    top_k: 5
   #    min_score: 0.25
+
+web:
+  # `python -m porn_hunter web` serves a browser UI for search, queueing and job control.
+  host: 127.0.0.1                   # loopback only. To expose it on a network you MUST set auth_token.
+  port: 8765
+  auth_token: null                  # or env PORN_HUNTER_WEB_TOKEN (preferred over writing it here)
+  allowed_hosts: []                 # extra Host header names to accept in loopback mode (e.g. a reverse proxy)
+  blur_thumbnails: true             # blur thumbnails until hovered; toggle in the UI
+  run_scheduler: false              # true = the web process also runs the cron scheduler below
+  results_per_page: 24

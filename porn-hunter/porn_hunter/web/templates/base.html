@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="blur-default" content="{{ '1' if blur_default else '0' }}">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}porn-hunter{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('search_page') }}">porn-hunter</a>
+    <nav>
+      <a href="{{ url_for('search_page') }}" {% if request.endpoint == 'search_page' %}aria-current="page"{% endif %}>Search</a>
+      <a href="{{ url_for('queue_page') }}" {% if request.endpoint == 'queue_page' %}aria-current="page"{% endif %}>Queue</a>
+      <a href="{{ url_for('status_page') }}" {% if request.endpoint == 'status_page' %}aria-current="page"{% endif %}>Status</a>
+    </nav>
+    <div class="topbar-right">
+      <button type="button" class="btn ghost" data-action="blur-toggle" title="Blur or reveal thumbnails">Blur</button>
+      {% if auth_enabled %}
+      <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn ghost">Log out</button></form>
+      {% endif %}
+    </div>
+  </header>
+  <div id="job-banner" class="banner" hidden></div>
+  <main>{% block content %}{% endblock %}</main>
+  <div id="toasts" aria-live="polite"></div>
+</body>
+</html>

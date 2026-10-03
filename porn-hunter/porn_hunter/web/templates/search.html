@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{% if q %}{{ q }} · {% endif %}Search · porn-hunter{% endblock %}
+{% block content %}
+<form class="search" method="get" action="{{ url_for('search_page') }}">
+  <input type="search" name="q" value="{{ q }}" placeholder="Describe what you're looking for…" autofocus aria-label="Search query">
+  <button class="btn primary" type="submit">Search</button>
+  <details class="filters"{% if chosen_sites or new_only or min_score %} open{% endif %}>
+    <summary>Filters</summary>
+    <div class="filter-row">
+      <label>Results <select name="k">{% for n in (12, 24, 48, 96) %}<option value="{{ n }}" {% if n == k %}selected{% endif %}>{{ n }}</option>{% endfor %}</select></label>
+      <label>Min score <input type="number" name="min_score" step="0.01" min="-1" max="1" value="{{ min_score }}" placeholder="0.00"></label>
+      <label class="check"><input type="checkbox" name="new_only" value="1" {% if new_only %}checked{% endif %}> Hide downloaded</label>
+      {% for s in sites %}
+      <label class="check"><input type="checkbox" name="site" value="{{ s }}" {% if s in chosen_sites %}checked{% endif %}> {{ s }}</label>
+      {% endfor %}
+    </div>
+  </details>
+</form>
+
+{% if error %}<p class="notice error" role="alert">{{ error }}</p>{% endif %}
+
+{% if not indexed %}
+  <section class="empty">
+    <h2>Nothing indexed yet</h2>
+    <p>Run an index job to scrape thumbnails and build the search index.</p>
+    <a class="btn primary" href="{{ url_for('status_page') }}">Go to Status → Index</a>
+  </section>
+{% elif q and not results and not error %}
+  <section class="empty"><h2>No results</h2><p>Try different words, or lower the minimum score.</p></section>
+{% elif results %}
+  <p class="count">{{ results|length }} result{{ '' if results|length == 1 else 's' }} <span class="muted">· {{ indexed }} indexed</span></p>
+  <div class="grid">
+  {% for r in results %}
+    <article class="card" data-id="{{ r.id }}">
+      <div class="thumb"><img src="{{ r.thumb }}" loading="lazy" alt=""></div>
+      <div class="body">
+        <div class="meta">
+          <span class="score" title="cosine similarity">{{ '%.3f'|format(r.score) }}</span>
+          <span class="site">{{ r.site }}</span>
+          {% if r.duration %}<span class="muted">{{ r.duration }}</span>{% endif %}
+          <span class="chip chip-{{ r.status }}" data-status>{{ r.status if r.status != 'none' else '' }}</span>
+        </div>
+        <h3 class="title" title="{{ r.title }}">{{ r.title or '(untitled)' }}</h3>
+        <div class="actions">
+          <button class="btn" data-action="queue" data-id="{{ r.id }}">Queue</button>
+          <button class="btn primary" data-action="download" data-id="{{ r.id }}">Download</button>
+          {% set href = r.url|safe_url %}
+          {% if href %}<a class="btn ghost" href="{{ href }}" target="_blank" rel="noopener noreferrer">Source ↗</a>{% endif %}
+        </div>
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+{% else %}
+  <section class="empty"><h2>Search {{ indexed }} indexed videos</h2><p>Describe the scene in plain language. Ranking is by thumbnail similarity.</p></section>
+{% endif %}
+{% endblock %}

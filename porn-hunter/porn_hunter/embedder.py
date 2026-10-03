@@ -3,6 +3,7 @@ never embed anything (stats, queue, download) start instantly."""
 from __future__ import annotations
 
 import logging
+import threading
 from typing import Protocol, Sequence
 
 import numpy as np
@@ -33,6 +34,7 @@ class ClipEmbedder:
         self._model = self._preprocess = self._tokenizer = self._torch = None
         self._device = None
         self._dim = None
+        self._lock = threading.RLock()   # one load, and one inference at a time
 
     @property
     def model_id(self) -> str:
@@ -48,6 +50,10 @@ class ClipEmbedder:
         return "cpu"
 
     def _load(self) -> None:
+        with self._lock:
+            self._load_locked()
+
+    def _load_locked(self) -> None:
         if self._model is not None:
             return
         import open_clip
@@ -83,6 +89,10 @@ class ClipEmbedder:
         return self._dim
 
     def embed_images(self, images: Sequence) -> np.ndarray:
+        with self._lock:
+            return self._embed_images(images)
+
+    def _embed_images(self, images: Sequence) -> np.ndarray:
         self._load()
         torch = self._torch
         out = []
@@ -94,6 +104,10 @@ class ClipEmbedder:
         return normalize(np.concatenate(out)) if out else np.zeros((0, self.dim), np.float32)
 
     def embed_text(self, texts: Sequence[str]) -> np.ndarray:
+        with self._lock:
+            return self._embed_text(texts)
+
+    def _embed_text(self, texts: Sequence[str]) -> np.ndarray:
         self._load()
         tokens = self._tokenizer(list(texts)).to(self._device)
         with self._torch.no_grad():

@@ -1,8 +1,9 @@
 # porn-hunter
 
-A command-line tool that builds a **semantic search index** over video thumbnails from Pornhub, xVideos and
-xHamster, lets you search it in plain English, downloads the matches with **yt-dlp**, and keeps itself up to date
-with a **cron-style scheduler**. No web UI; everything is a CLI command plus one `config.yaml`.
+A tool that builds a **semantic search index** over video thumbnails from Pornhub, xVideos and xHamster, lets
+you search it in plain English, downloads the matches with **yt-dlp**, and keeps itself up to date with a
+**cron-style scheduler**. Use it from the **command line** or from a **local web app**; both share one
+`config.yaml` and one index.
 
 ```
  search pages ──requests+BeautifulSoup──▶ thumbnails ──open_clip ViT-B-32──▶ embeddings ──▶ FAISS (cosine)
@@ -133,6 +134,42 @@ scheduler:
     - {query: "red dress on a balcony", top_k: 5, min_score: 0.25}
 ```
 
+### 5. Web app
+
+```bash
+python -m porn_hunter web                 # http://127.0.0.1:8765/
+python -m porn_hunter web --scheduler     # same, and also run the cron scheduler inside this process
+```
+
+A browser UI over the same index and download queue:
+
+- **Search**: a natural-language box with filters (result count, minimum score, sites, hide downloaded) and a
+  thumbnail grid. Each card shows the similarity score, site, duration and download status, with **Queue**,
+  **Download** and **Source** buttons.
+- **Queue**: queued, failed (with the error) and downloaded videos; remove or retry individual items, or
+  **Download queue now**.
+- **Status**: counts per site and status, a form to start an **index job** (queries, pages, sites), the
+  schedule with next run times, a job history, and the tail of the log.
+- Index and download jobs run in the background (one at a time) and show progress in a banner. They share the lock
+  file with the CLI and scheduler, so a web-started job never overlaps one started elsewhere.
+- Thumbnails are **blurred until hovered** by default (`web.blur_thumbnails`; the **Blur** button toggles and
+  remembers your choice). It has a light and a dark theme and works on a phone.
+
+The first start loads the CLIP model (and downloads the weights once). If that fails, for example offline, the
+pages other than search still work and the log says why.
+
+**Security model.** The app can start downloads and scrape sites, so it is locked down by default:
+
+- It listens on **127.0.0.1 only**. Binding any other address (`--host 0.0.0.0` or `web.host`) is **refused unless
+  you set a token** (`PORN_HUNTER_WEB_TOKEN` or `web.auth_token`, at least 12 characters). With a token you get a
+  login page, and scripts can send `Authorization: Bearer <token>`. Failed logins are throttled.
+- Plain HTTP is used, so over a network the token travels unencrypted. Put a TLS reverse proxy (Caddy, nginx) in
+  front of it, and add its hostname to `web.allowed_hosts` if you run without a token behind it.
+- Every state-changing request needs a CSRF token and `SameSite=Strict` cookies are used. Requests with an
+  unexpected `Host` header are rejected (DNS-rebinding defence). A strict Content-Security-Policy is sent, there is
+  no inline script or style, scraped titles are HTML-escaped, and only `http(s)` source links are rendered.
+- It is a single-user tool served by Werkzeug's threaded server, not a hardened multi-user service.
+
 ### Other commands
 
 ```bash
@@ -168,6 +205,7 @@ the config file's directory.
 | `search`    | default `top_k` and `min_score`                                                                           |
 | `download`  | **quality, format**, filename template, delays, retries, backoff, attempts, per-run cap, rate limit, cookies file, raw yt-dlp options |
 | `scheduler` | **cron expressions**, run-on-start flags, `auto_queue`                                                    |
+| `web`       | web UI host/port, auth token, allowed hosts, thumbnail blur, in-process scheduler, results per page       |
 
 ## How it is stored
 
@@ -185,7 +223,9 @@ pip install -r requirements-dev.txt
 python -m pytest            # from the porn-hunter directory
 ```
 
-The suite runs offline. Scrapers are tested against HTML fixtures in `tests/fixtures/`, HTTP is mocked with
+The suite runs offline. The web app is tested through Flask's test client (escaping, CSRF, Host checks, auth,
+job handling, path traversal) and over a real socket; its JavaScript was additionally checked by hand in headless
+Chromium, but there is no automated browser test. Scrapers are tested against HTML fixtures in `tests/fixtures/`, HTTP is mocked with
 `responses`, the downloader's format strings are checked against yt-dlp's real selector engine, and one test runs
 real yt-dlp against a local HTTP server. Search and indexing run end to end with a deterministic colour-based fake
 embedder (so "red" demonstrably retrieves the red thumbnail). The real ViT-B-32 graph is exercised with random

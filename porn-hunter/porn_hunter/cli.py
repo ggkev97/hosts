@@ -7,7 +7,7 @@ import logging
 import sys
 
 from porn_hunter.app import App
-from porn_hunter.config import load_config
+from porn_hunter.config import CONTAINERS, QUALITY_RE, load_config
 from porn_hunter.errors import HunterError
 from porn_hunter.logging_setup import setup_logging
 
@@ -31,6 +31,29 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--site", action="append")
     s.add_argument("--new-only", action="store_true", help="hide videos that are already downloaded")
     s.add_argument("--json", action="store_true", help="machine-readable output")
+
+    s = sub.add_parser("queue", help="manage the download queue")
+    qsub = s.add_subparsers(dest="queue_command", required=True)
+    q = qsub.add_parser("add", help="queue the best matches for a search")
+    q.add_argument("query")
+    q.add_argument("-k", "--top-k", type=int, default=5)
+    q.add_argument("--min-score", type=float)
+    q.add_argument("--site", action="append")
+    q = qsub.add_parser("add-id", help="queue videos by id (see `search`)")
+    q.add_argument("ids", nargs="+", type=int)
+    qsub.add_parser("list", help="show queued videos")
+    qsub.add_parser("clear", help="empty the queue")
+
+    s = sub.add_parser("download", help="download queued videos (or --url / --id / --query matches)")
+    s.add_argument("--url", help="download a single video URL")
+    s.add_argument("--id", type=int, nargs="+", help="download these indexed video ids")
+    s.add_argument("--query", help="search, then download the top matches")
+    s.add_argument("-k", "--top-k", type=int, default=3, help="matches to fetch with --query (default 3)")
+    s.add_argument("--min-score", type=float)
+    s.add_argument("--limit", type=int, help="max videos this run (default: whole queue)")
+    s.add_argument("--quality", help="best | 1080p | 720p ... (default: download.quality)")
+    s.add_argument("--format", dest="container", choices=CONTAINERS,
+                   help="container (default: download.format)")
 
     sub.add_parser("stats", help="show index and download-queue statistics")
     sub.add_parser("rebuild", help="rebuild the FAISS index from the metadata database")
@@ -62,6 +85,53 @@ def cmd_search(app: App, args) -> int:
     return 0
 
 
+def cmd_queue(app: App, args) -> int:
+    if args.queue_command == "add":
+        results = app.searcher.search(args.query, args.top_k, args.min_score, args.site, exclude_downloaded=True)
+        n = app.store.queue(r.video.id for r in results)
+        print(f"queued {n} of {len(results)} matches")
+    elif args.queue_command == "add-id":
+        missing = [i for i in args.ids if app.store.get(i) is None]
+        if missing:
+            raise HunterError(f"unknown video id(s): {', '.join(map(str, missing))}")
+        print(f"queued {app.store.queue(args.ids)} video(s)")
+    elif args.queue_command == "list":
+        queued = app.store.queued()
+        for v in queued:
+            print(f"[{v.id}] {v.site:<8} attempts={v.dl_attempts} {v.title[:60]}  {v.url}")
+        print(f"{len(queued)} queued")
+    else:
+        print(f"removed {app.store.dequeue()} video(s) from the queue")
+    return 0
+
+
+def cmd_download(app: App, args) -> int:
+    if args.quality and not QUALITY_RE.match(args.quality):
+        raise HunterError(f"invalid --quality {args.quality!r}: use best, 1080p, 720p ...")
+    dl = app.downloader
+    if args.url:
+        path = dl.add_and_download_url(args.url, args.quality, args.container)
+        print(f"saved {path}")
+        return 0
+    videos = None
+    if args.id:
+        videos = []
+        for vid in args.id:
+            video = app.store.get(vid)
+            if video is None:
+                raise HunterError(f"unknown video id {vid}")
+            videos.append(video)
+    elif args.query:
+        results = app.searcher.search(args.query, args.top_k, args.min_score, exclude_downloaded=True)
+        videos = [r.video for r in results]
+    if videos is not None:
+        app.store.queue(v.id for v in videos)
+        videos = [v for v in (app.store.get(v.id) for v in videos) if v.dl_status == "queued"]
+    report = dl.run_queue(videos, args.limit, args.quality, args.container)
+    print(report.summary())
+    return 1 if report.failed and not report.downloaded else 0
+
+
 def cmd_stats(app: App, args) -> int:
     print(json.dumps(app.store.stats(), indent=2))
     return 0
@@ -74,7 +144,7 @@ def cmd_rebuild(app: App, args) -> int:
     return 0
 
 
-COMMANDS = {"index": cmd_index, "search": cmd_search, "stats": cmd_stats, "rebuild": cmd_rebuild}
+COMMANDS = {"index": cmd_index, "search": cmd_search, "queue": cmd_queue, "download": cmd_download, "stats": cmd_stats, "rebuild": cmd_rebuild}
 
 
 def main(argv=None, app: App | None = None) -> int:

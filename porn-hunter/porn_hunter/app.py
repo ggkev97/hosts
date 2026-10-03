@@ -4,6 +4,7 @@ from __future__ import annotations
 from functools import cached_property
 
 from porn_hunter.config import Config
+from porn_hunter.downloader import Downloader
 from porn_hunter.embedder import ClipEmbedder
 from porn_hunter.http import HttpClient
 from porn_hunter.indexer import Indexer
@@ -14,9 +15,9 @@ from porn_hunter.vector_index import open_index
 
 
 class App:
-    def __init__(self, cfg: Config, embedder=None, http: HttpClient | None = None):
+    def __init__(self, cfg: Config, embedder=None, http: HttpClient | None = None, ydl_factory=None):
         self.cfg = cfg
-        self._embedder, self._http = embedder, http
+        self._embedder, self._http, self._ydl_factory = embedder, http, ydl_factory
 
     @cached_property
     def store(self) -> VideoStore:
@@ -42,3 +43,7 @@ class App:
     @cached_property
     def searcher(self) -> Searcher:
         return Searcher(self.cfg, self.store, self.vindex, self.embedder)
+
+    @cached_property
+    def downloader(self) -> Downloader:
+        return Downloader(self.cfg, self.store, ydl_factory=self._ydl_factory)

@@ -167,16 +167,32 @@ class VideoStore:
                 "UPDATE videos SET dl_status='downloaded', dl_path=?, dl_at=?, dl_error=NULL WHERE id=?",
                 (path, now_iso(), vid))
 
-    def mark_failed(self, vid: int, error: str, max_attempts: int) -> str:
-        """Record a failed run. Stays queued until max_attempts, then becomes 'failed'."""
+    def mark_failed(self, vid: int, error: str, max_attempts: int, count: bool = True) -> str:
+        """Record a failed run. Stays queued until max_attempts, then becomes 'failed'.
+
+        count=False (e.g. the site is rate limiting us) records the error without
+        using up one of the video's attempts."""
         with self.db:
             self.db.execute(
-                "UPDATE videos SET dl_attempts=dl_attempts+1, dl_error=? WHERE id=?", (error, vid))
+                "UPDATE videos SET dl_attempts=dl_attempts+?, dl_error=? WHERE id=?",
+                (1 if count else 0, error, vid))
             attempts = self.db.execute(
                 "SELECT dl_attempts FROM videos WHERE id=?", (vid,)).fetchone()[0]
             status = "failed" if attempts >= max_attempts else "queued"
             self.db.execute("UPDATE videos SET dl_status=? WHERE id=?", (status, vid))
         return status
+
+    def dequeue(self, ids: Iterable[int] | None = None) -> int:
+        """Take queued videos (all, or just `ids`) back out of the queue."""
+        with self.db:
+            if ids is None:
+                cur = self.db.execute("UPDATE videos SET dl_status='none' WHERE dl_status='queued'")
+                return cur.rowcount
+            n = 0
+            for vid in ids:
+                n += self.db.execute("UPDATE videos SET dl_status='none' WHERE id=? AND dl_status='queued'",
+                                     (vid,)).rowcount
+            return n
 
     def stats(self) -> dict:
         out = {"videos": self.db.execute("SELECT COUNT(*) FROM videos").fetchone()[0],

@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · porn-hunter{% endblock %}
+{% block content %}
+<section class="empty"><h2>{{ code }}</h2><p>{{ message }}</p><a class="btn" href="{{ url_for('search_page') }}">Back to search</a></section>
+{% endblock %}

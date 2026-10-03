@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title or 'Watch' }} · porn-hunter{% endblock %}
+{% block content %}
+<section class="player">
+  <video controls playsinline preload="metadata" src="{{ url_for('media', vid=video.id) }}"></video>
+  <h2 class="watch-title">{{ video.title or video.url }}</h2>
+  <p class="muted">{{ video.site }} · {{ ext }}
+    {% set href = video.url|safe_url %}{% if href %} · <a href="{{ href }}" target="_blank" rel="noopener noreferrer">Source ↗</a>{% endif %}</p>
+  {% if ext not in ('.mp4', '.m4v', '.mov') %}
+  <p class="notice">This is a <code>{{ ext }}</code> file. iPhone Safari plays H.264/AAC <code>.mp4</code> best; other containers or codecs may not play.</p>
+  {% endif %}
+  <p><a class="btn" href="{{ url_for('queue_page') }}">← Queue</a> <a class="btn" href="{{ url_for('search_page') }}">Search</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Queue · porn-hunter{% endblock %}
+{% macro row(v, kind) %}
+<li class="row" data-id="{{ v.id }}">
+  <img class="mini" src="{{ url_for('thumb', vid=v.id) }}" loading="lazy" alt="">
+  <div class="row-main">
+    <div class="title">{{ v.title or v.url }}</div>
+    <div class="muted">{{ v.site }}{% if v.dl_attempts %} · {{ v.dl_attempts }} failed attempt{{ '' if v.dl_attempts == 1 else 's' }}{% endif %}{% if v.dl_at %} · {{ v.dl_at }}{% endif %}</div>
+    {% if v.dl_error %}<div class="err">{{ v.dl_error[:300] }}</div>{% endif %}
+    {% if v.dl_path %}<div class="muted path">{{ v.dl_path }}</div>{% endif %}
+  </div>
+  <div class="row-actions">
+    {% if kind == 'queued' %}<button class="btn" data-action="remove" data-id="{{ v.id }}">Remove</button>{% endif %}
+    {% if kind == 'downloaded' %}<a class="btn primary" href="{{ url_for('watch', vid=v.id) }}">Watch</a>{% endif %}
+    {% if kind == 'failed' %}<button class="btn" data-action="retry" data-id="{{ v.id }}">Retry</button>{% endif %}
+  </div>
+</li>
+{% endmacro %}
+{% block content %}
+<section>
+  <div class="section-head">
+    <h2>Queued <span class="muted">({{ queued|length }})</span></h2>
+    <div>
+      <button class="btn primary" data-action="job-download" {% if not queued %}disabled{% endif %}>Download queue now</button>
+      <button class="btn" data-action="clear-queue" {% if not queued %}disabled{% endif %}>Clear</button>
+    </div>
+  </div>
+  {% if queued %}<ul class="rows">{% for v in queued %}
+    {{ row(v, 'queued') }}
+  {% endfor %}</ul>{% else %}<p class="muted">Nothing queued. Queue videos from the search page.</p>{% endif %}
+</section>
+{% if failed %}
+<section>
+  <h2>Failed <span class="muted">({{ failed|length }})</span></h2>
+  <ul class="rows">{% for v in failed %}{{ row(v, 'failed') }}{% endfor %}</ul>
+  <p class="muted">Retry puts a failed video back in the queue with a fresh attempt budget.</p>
+</section>
+{% endif %}
+{% if downloaded %}
+<section>
+  <h2>Downloaded <span class="muted">(latest {{ downloaded|length }})</span></h2>
+  <ul class="rows">{% for v in downloaded %}{{ row(v, 'downloaded') }}{% endfor %}</ul>
+</section>
+{% endif %}
+{% endblock %}

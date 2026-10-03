@@ -4,7 +4,6 @@ import re
 import numpy as np
 import pytest
 import responses
-from PIL import Image
 
 from porn_hunter import cli
 from porn_hunter.app import App
@@ -20,27 +19,28 @@ def app(cfg):
     return App(cfg, embedder=FakeEmbedder(), http=HttpClient(cfg.http, sleep=lambda s: None))
 
 
-def mock_site(fixtures_dir, base, fixture, thumbs):
-    html = (fixtures_dir / fixture).read_text()
+def mock_site(fixtures_dir, base, fixture, thumbs, html=None):
+    html = html or (fixtures_dir / fixture).read_text()
     responses.get(re.compile(base + r".*(page=1|p=0)(&|$)"), body=html)
     responses.get(re.compile(base + r".*(page=[2-9]|p=[1-9])(&|$)"), body="<html></html>")
     for url, color in thumbs.items():
         responses.get(url, body=png_bytes(color), content_type="image/png")
 
 
-def mock_all(fixtures_dir, blocked=()):
+def mock_all(fixtures_dir, blocked=(), overrides=None):
+    overrides = overrides or {}
     if "pornhub" in blocked:
         responses.get(re.compile(r"https://www\.pornhub\.com.*"), status=403)
     else:
         mock_site(fixtures_dir, r"https://www\.pornhub\.com", "pornhub_search.html", {
             "https://cdn.test/ph/red.png": "red", "http://cdn.test/ph/green.png": "green",
-            "http://cdn.test/ph/blue.png": "blue"})
+            "http://cdn.test/ph/blue.png": "blue"}, overrides.get("pornhub"))
     mock_site(fixtures_dir, r"https://www\.xvideos\.com", "xvideos_search.html", {
         "https://cdn.test/xv/red.png": "red", "https://www.xvideos.com/thumbs/green.png": "green",
-        "https://cdn.test/xv/blue.png": "blue"})
+        "https://cdn.test/xv/blue.png": "blue"}, overrides.get("xvideos"))
     mock_site(fixtures_dir, r"https://xhamster\.com", "xhamster_search.html", {
         "https://cdn.test/xh/red.png": "red", "https://cdn.test/xh/green.png": "green",
-        "https://cdn.test/xh/blue.png": "blue"})
+        "https://cdn.test/xh/blue.png": "blue"}, overrides.get("xhamster"))
 
 
 @responses.activate

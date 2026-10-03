@@ -9,6 +9,7 @@ import sys
 from porn_hunter.app import App
 from porn_hunter.config import CONTAINERS, QUALITY_RE, load_config
 from porn_hunter.errors import HunterError
+from porn_hunter.locking import LockBusy, file_lock
 from porn_hunter.logging_setup import setup_logging
 
 log = logging.getLogger("porn_hunter.cli")
@@ -54,6 +55,13 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--quality", help="best | 1080p | 720p ... (default: download.quality)")
     s.add_argument("--format", dest="container", choices=CONTAINERS,
                    help="container (default: download.format)")
+
+    s = sub.add_parser("schedule", help="cron-style scheduler: re-index and download on timers")
+    ssub = s.add_subparsers(dest="schedule_command", required=True)
+    ssub.add_parser("run", help="run the scheduler loop in the foreground")
+    q = ssub.add_parser("once", help="run one job now (handy from system cron)")
+    q.add_argument("job", choices=["index", "download"])
+    ssub.add_parser("next", help="print the next scheduled run times")
 
     sub.add_parser("stats", help="show index and download-queue statistics")
     sub.add_parser("rebuild", help="rebuild the FAISS index from the metadata database")
@@ -132,6 +140,22 @@ def cmd_download(app: App, args) -> int:
     return 1 if report.failed and not report.downloaded else 0
 
 
+def cmd_schedule(app: App, args) -> int:
+    from porn_hunter import scheduler
+    if args.schedule_command == "run":
+        scheduler.run_scheduler(app)
+    elif args.schedule_command == "once":
+        job = scheduler.index_job if args.job == "index" else scheduler.download_job
+        job(app)
+    else:
+        from datetime import datetime
+        from croniter import croniter
+        for name in ("index", "download"):
+            expr = getattr(app.cfg.scheduler, f"{name}_cron")
+            print(f"{name:<9} {expr:<16} next: {croniter(expr, datetime.now()).get_next(datetime):%Y-%m-%d %H:%M}")
+    return 0
+
+
 def cmd_stats(app: App, args) -> int:
     print(json.dumps(app.store.stats(), indent=2))
     return 0
@@ -144,7 +168,18 @@ def cmd_rebuild(app: App, args) -> int:
     return 0
 
 
-COMMANDS = {"index": cmd_index, "search": cmd_search, "queue": cmd_queue, "download": cmd_download, "stats": cmd_stats, "rebuild": cmd_rebuild}
+COMMANDS = {"index": cmd_index, "search": cmd_search, "queue": cmd_queue, "download": cmd_download,
+            "schedule": cmd_schedule, "stats": cmd_stats, "rebuild": cmd_rebuild}
+
+
+EX_TEMPFAIL = 75
+
+
+def needs_lock(args) -> bool:
+    """index/download (and the one-shot schedule jobs) must not overlap with each other or the
+    scheduler. `schedule run` locks per job instead, so the loop itself can idle freely."""
+    return args.command in ("index", "download") or (
+        args.command == "schedule" and args.schedule_command == "once")
 
 
 def main(argv=None, app: App | None = None) -> int:
@@ -153,7 +188,13 @@ def main(argv=None, app: App | None = None) -> int:
         cfg = load_config(args.config)
         setup_logging(cfg)
         app = app or App(cfg)
+        if needs_lock(args):
+            with file_lock(cfg.path("lock_file")):
+                return COMMANDS[args.command](app, args)
         return COMMANDS[args.command](app, args)
+    except LockBusy as exc:
+        log.error("%s; try again later", exc)
+        return EX_TEMPFAIL
     except HunterError as exc:
         log.error("%s", exc)
         return 2

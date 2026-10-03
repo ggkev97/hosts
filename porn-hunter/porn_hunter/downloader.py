@@ -193,7 +193,7 @@ class Downloader:
         return path
 
     def run_queue(self, videos: list[Video] | None = None, limit: int | None = None,
-                  quality=None, container=None) -> DownloadReport:
+                  quality=None, container=None, should_stop=None) -> DownloadReport:
         """Process the queue (or an explicit list), pausing a random interval between videos."""
         d = self.cfg.download
         todo = videos if videos is not None else self.store.queued(limit)
@@ -203,6 +203,9 @@ class Downloader:
         blocked: set[str] = set()
         started = False
         for video in todo:
+            if should_stop and should_stop():
+                log.info("stop requested; leaving the rest of the queue for later")
+                break
             if video.site in blocked:
                 report.deferred.append(video.id)
                 continue

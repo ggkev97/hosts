@@ -65,7 +65,7 @@ index:
 
 search:
   top_k: 20
-  min_score: 0.0                    # cosine similarity floor (-1..1); CLIP text-image scores are usually 0.15-0.35
+  min_score: 0.0                    # cosine similarity floor (-1..1); CLIP text-image scores are small, so calibrate on your data
 
 download:
   quality: best                     # best | 1080p | 720p (any NNNp works)

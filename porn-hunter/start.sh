@@ -26,13 +26,28 @@ then run this script again."
   PY=.venv/bin/python
 fi
 
-# --- 2. Install packages (first run, or when requirements.txt changed) ------------------------
-WANT="$("$PY" -c 'import hashlib; print(hashlib.sha256(open("requirements.txt","rb").read()).hexdigest())')"
+# --- 2. Install packages (first run, or when the requirements changed) -------------------------
+# Some libraries only publish builds for newer Macs, so pick the list that fits this computer.
+REQ="$("$PY" -m porn_hunter.platform_requirements)"
+SEEN="$("$PY" -m porn_hunter.platform_requirements --describe)"
+printf '\n== This computer: %s\n== Package list:  %s\n' "$SEEN" "$REQ"
+WANT="$("$PY" -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$REQ")"
 HAVE="$(cat .venv/.requirements.sha 2>/dev/null || true)"
 if [ "$WANT" != "$HAVE" ]; then
   say "Installing packages. This takes a few minutes the first time (it downloads PyTorch)."
-  "$PY" -m pip install --upgrade pip >/dev/null
-  "$PY" -m pip install -r requirements.txt || fail "Installing packages failed. Check your internet connection and run this script again."
+  "$PY" -m pip install --upgrade pip >/dev/null 2>&1 || true
+  if ! "$PY" -m pip install -r "$REQ"; then
+    {
+      printf '\n---------- COPY EVERYTHING FROM THIS LINE DOWN AND SEND IT TO CLAUDE ----------\n'
+      printf 'computer: %s\npackage list: %s\npip: %s\n' "$SEEN" "$REQ" "$("$PY" -m pip --version 2>&1)"
+      printf 'macOS: %s\n' "$(sw_vers -productVersion 2>/dev/null || echo n/a)"
+      printf 'pip index settings: %s\n' "$(env | grep -i '^PIP_' | tr '\n' ' ')"
+      printf 'first supported platform tags:\n'
+      "$PY" -m pip debug --verbose 2>&1 | grep -A4 'Compatible tags' || true
+      printf -- '---------- END ----------\n'
+    } >&2
+    fail "Installing packages failed (details above). Check your internet connection, then run this script again."
+  fi
   printf '%s' "$WANT" > .venv/.requirements.sha
 fi
 

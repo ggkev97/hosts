@@ -1,0 +1,17 @@
+# Intel Macs: PyTorch stopped publishing Intel-Mac builds after 2.2.2, which needs NumPy < 2.
+# start.sh picks this file automatically (see porn_hunter/platform_requirements.py).
+# Runtime dependencies (pinned)
+open_clip_torch==3.3.0
+torch==2.2.2
+torchvision==0.17.2
+faiss-cpu==1.10.0
+yt-dlp==2026.8.19
+requests==2.34.2
+beautifulsoup4==4.15.0
+lxml==6.1.3
+PyYAML==6.0.3
+numpy==1.26.4
+Pillow==12.3.0
+croniter==6.2.4
+Flask==3.1.3
+imageio-ffmpeg==0.6.0

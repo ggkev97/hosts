@@ -32,8 +32,11 @@ if errorlevel 1 goto failed
 :have_venv
 set "VPY=.venv\Scripts\python.exe"
 
-rem --- 2. Install packages (first run, or when requirements.txt changed) --------------------
-"%VPY%" -c "import hashlib; print(hashlib.sha256(open('requirements.txt','rb').read()).hexdigest())" > ".venv\want.sha"
+rem --- 2. Install packages (first run, or when the requirements changed) ------------------------
+for /f "delims=" %%R in ('"%VPY%" -m porn_hunter.platform_requirements') do set "REQ=%%R"
+echo.
+echo == Package list: %REQ%
+"%VPY%" -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" "%REQ%" > ".venv\want.sha"
 set /p WANT=<".venv\want.sha"
 set "HAVE="
 if exist ".venv\.requirements.sha" set /p HAVE=<".venv\.requirements.sha"
@@ -41,8 +44,16 @@ if "%WANT%"=="%HAVE%" goto have_packages
 echo.
 echo == Installing packages. This takes a few minutes the first time (it downloads PyTorch).
 "%VPY%" -m pip install --upgrade pip >nul 2>&1
-"%VPY%" -m pip install -r requirements.txt
-if errorlevel 1 goto failed
+"%VPY%" -m pip install -r "%REQ%"
+if errorlevel 1 (
+  echo.
+  echo ---------- COPY EVERYTHING FROM THIS LINE DOWN AND SEND IT TO CLAUDE ----------
+  "%VPY%" -m porn_hunter.platform_requirements --describe
+  "%VPY%" -m pip --version
+  echo package list: %REQ%
+  echo ---------- END ----------
+  goto failed
+)
 > ".venv\.requirements.sha" echo %WANT%
 :have_packages
 

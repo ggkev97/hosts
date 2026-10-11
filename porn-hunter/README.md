@@ -39,12 +39,19 @@ You need a **Mac or Windows computer** that stays on, and your phone on the **sa
 Next time, just run the same start file again (it is quick). Leave its window open while you use the app. Close it
 to stop. The password is saved in the `.web_token` file, so it stays the same.
 
-If something goes wrong, copy the red error text or the last lines of the window and send them to me. ffmpeg
-(needed for downloads) is bundled, so there is nothing else to install.
+The start script checks what kind of computer you have and installs the matching versions automatically:
+Apple-silicon Macs on macOS 14 or newer, older Apple-silicon Macs (macOS 11 to 13), Intel Macs, and Windows are all
+handled. (The newest AI libraries don't exist for older Macs, so older Macs get slightly older, equally capable
+versions.) It prints a line starting `== This computer:` so you can see what it detected.
+
+If something goes wrong, the window prints a block between `COPY EVERYTHING FROM THIS LINE DOWN` and `END`. Copy that
+block and send it to me. ffmpeg (needed for downloads) is bundled, so there is nothing else to install.
 
 ## Requirements
 
-- Python **3.11+** (pinned NumPy 2.x needs it)
+- Python **3.11+** (pinned NumPy needs it)
+- macOS 11 or newer, Windows 10 or newer, or Linux. Older Macs and Intel Macs use the `requirements-macos-*.txt` lists
+  automatically (the latest PyTorch doesn't support them)
 - ffmpeg, which yt-dlp uses to merge separate video and audio streams. A copy is **bundled** (`imageio-ffmpeg`)
   and used automatically when your system has none, so you normally don't need to install it
 - ~1 GB disk for PyTorch and the CLIP weights (roughly 600 MB, downloaded from Hugging Face on first use), plus space

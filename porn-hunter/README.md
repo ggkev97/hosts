@@ -17,10 +17,36 @@ you search it in plain English, downloads the matches with **yt-dlp**, and keeps
 > downloading may violate a site's terms of service; the polite delays in `config.yaml` are there to keep load low,
 > so don't turn them off. Only download content you are entitled to download.
 
+## Start here (easiest way)
+
+You need a **Mac or Windows computer** that stays on, and your phone on the **same Wi-Fi**. No programming needed.
+
+1. **Download the code.** Open <https://github.com/ggkev97/hosts/tree/claude/porn-hunter-project-bt0f3l> in a
+   browser, click the green **Code** button, then **Download ZIP**. Unzip it and open the **`porn-hunter`** folder inside.
+2. **Install Python once** (skip if you already have Python 3.11 or newer): download Python 3.12 from
+   <https://www.python.org/downloads/> and run the installer. On **Windows, tick "Add python.exe to PATH"**.
+3. **Start it.**
+   - **Windows:** double-click **`start.bat`**. If Windows asks about the firewall, click **Allow**.
+   - **Mac:** open the **Terminal** app, type `bash ` (with a space after it), drag the **`start.sh`** file into the
+     Terminal window, and press **Return**. If the Mac asks to allow incoming connections, click **Allow**.
+4. **Wait.** The first start installs things and downloads the search model, which takes 5 to 15 minutes. When it is
+   ready, the window shows a **Password** and a line like
+   `on your phone (same Wi-Fi) open http://192.168.1.23:8765/`.
+5. **On your phone**, open that address in Safari, log in with the password, then go to **Status**, and
+   tap **Start index job**. When it finishes, go to **Search** and describe what you want. Tap a thumbnail to
+   un-blur it. Share, then **Add to Home Screen** makes it look like an app.
+
+Next time, just run the same start file again (it is quick). Leave its window open while you use the app. Close it
+to stop. The password is saved in the `.web_token` file, so it stays the same.
+
+If something goes wrong, copy the red error text or the last lines of the window and send them to me. ffmpeg
+(needed for downloads) is bundled, so there is nothing else to install.
+
 ## Requirements
 
 - Python **3.11+** (pinned NumPy 2.x needs it)
-- [ffmpeg](https://ffmpeg.org/) on your `PATH` (yt-dlp uses it to merge separate video and audio streams)
+- ffmpeg, which yt-dlp uses to merge separate video and audio streams. A copy is **bundled** (`imageio-ffmpeg`)
+  and used automatically when your system has none, so you normally don't need to install it
 - ~1 GB disk for PyTorch and the CLIP weights (roughly 600 MB, downloaded from Hugging Face on first use), plus space
   for thumbnails and videos
 - A GPU is optional (`model.device: auto` uses CUDA or Apple MPS if present, otherwise CPU).

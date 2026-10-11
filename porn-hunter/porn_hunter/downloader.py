@@ -5,6 +5,7 @@ import hashlib
 import logging
 import random
 import re
+import shutil
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -62,6 +63,20 @@ class _YdlLogger:
         log.error("yt-dlp: %s", msg)
 
 
+def bundled_ffmpeg() -> str | None:
+    """Path to the ffmpeg that ships inside the imageio-ffmpeg package, used only when the
+    system has no ffmpeg of its own, so users don't have to install one separately."""
+    if shutil.which("ffmpeg"):
+        return None
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception as exc:  # package missing, or no binary for this platform
+        log.warning("no ffmpeg found and no bundled copy available (%s); merging separate "
+                    "video/audio streams will fail until ffmpeg is installed", exc)
+        return None
+
+
 def build_ydl_options(cfg: Config, quality: str | None = None, container: str | None = None) -> dict:
     d: DownloadConfig = cfg.download
     quality, container = quality or d.quality, container or d.format
@@ -92,7 +107,10 @@ def build_ydl_options(cfg: Config, quality: str | None = None, container: str | 
         opts["cookiefile"] = str(Path(d.cookies_file).expanduser())
     if cfg.http.proxy:
         opts["proxy"] = cfg.http.proxy
-    opts.update(d.ytdlp_options)
+    ffmpeg = bundled_ffmpeg()
+    if ffmpeg:
+        opts["ffmpeg_location"] = ffmpeg
+    opts.update(d.ytdlp_options)          # explicit user options always win
     return opts
 
 

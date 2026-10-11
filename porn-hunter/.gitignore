@@ -33,3 +33,6 @@ logs/
 *.db-journal
 config.local.yaml
 cookies*.txt
+
+# start-script password (never commit)
+.web_token

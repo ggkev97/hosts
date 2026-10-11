@@ -1,4 +1,5 @@
 import random
+import sys
 from pathlib import Path
 
 import pytest
@@ -65,6 +66,33 @@ def test_options_accepted_by_real_yt_dlp(cfg):
     cfg.download.limit_rate = "fast"
     with pytest.raises(ConfigError, match="limit_rate"):
         build_ydl_options(cfg)
+
+
+def test_bundled_ffmpeg_used_only_when_system_has_none(cfg, monkeypatch, tmp_path):
+    import types
+    from porn_hunter import downloader as dmod
+    fake = tmp_path / "ffmpeg-fake"
+    monkeypatch.setitem(sys.modules, "imageio_ffmpeg", types.SimpleNamespace(get_ffmpeg_exe=lambda: str(fake)))
+    monkeypatch.setattr(dmod.shutil, "which", lambda name: "/usr/bin/ffmpeg")
+    assert "ffmpeg_location" not in build_ydl_options(cfg)                    # system ffmpeg wins
+    monkeypatch.setattr(dmod.shutil, "which", lambda name: None)
+    assert build_ydl_options(cfg)["ffmpeg_location"] == str(fake)             # fall back to the bundled one
+    cfg.download.ytdlp_options = {"ffmpeg_location": "/custom/ffmpeg"}
+    assert build_ydl_options(cfg)["ffmpeg_location"] == "/custom/ffmpeg"      # explicit config beats both
+    monkeypatch.setitem(sys.modules, "imageio_ffmpeg", None)                  # package unavailable: no crash
+    cfg.download.ytdlp_options = {}
+    assert "ffmpeg_location" not in build_ydl_options(cfg)
+
+
+def test_real_ytdlp_accepts_the_bundled_ffmpeg(cfg, monkeypatch):
+    """The path imageio-ffmpeg gives us is one yt-dlp actually recognises as a working ffmpeg."""
+    import shutil as _shutil
+    from yt_dlp.postprocessor import FFmpegMergerPP
+    monkeypatch.setattr(_shutil, "which", lambda name: None)
+    opts = build_ydl_options(cfg)
+    assert "ffmpeg_location" in opts
+    with yt_dlp.YoutubeDL(opts) as ydl:
+        assert FFmpegMergerPP(ydl).available, "yt-dlp does not accept the bundled ffmpeg"
 
 
 # --- downloader behaviour with an injected fake YoutubeDL ----------------------------------

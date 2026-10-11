@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Status · porn-hunter{% endblock %}
+{% block content %}
+<section class="stats">
+  <div class="stat"><b>{{ stats.embedded }}</b><span>indexed</span></div>
+  <div class="stat"><b>{{ stats.by_status.get('queued', 0) }}</b><span>queued</span></div>
+  <div class="stat"><b>{{ stats.by_status.get('downloaded', 0) }}</b><span>downloaded</span></div>
+  <div class="stat"><b>{{ stats.by_status.get('failed', 0) }}</b><span>failed</span></div>
+  {% for site, n in stats.by_site.items() %}<div class="stat"><b>{{ n }}</b><span>{{ site }}</span></div>{% endfor %}
+</section>
+
+<section>
+  <h2>Index</h2>
+  <form id="index-form" class="stack">
+    <label>Queries (one per line)
+      <textarea name="queries" rows="4" maxlength="4000">{{ default_queries }}</textarea></label>
+    <div class="filter-row">
+      <label>Pages per query <input type="number" name="pages" min="1" max="20" value="{{ pages }}"></label>
+      {% for s in sites %}<label class="check"><input type="checkbox" name="site" value="{{ s }}" checked> {{ s }}</label>{% endfor %}
+    </div>
+    <div><button class="btn primary" type="button" data-action="job-index">Start index job</button></div>
+  </form>
+  <p class="muted">Only videos not already indexed are added. Output folder for downloads: <code>{{ output_dir }}</code></p>
+</section>
+
+<section>
+  <h2>Schedule {% if scheduler_in_web %}<span class="chip chip-downloaded">running in this process</span>{% else %}<span class="chip">not running here</span>{% endif %}</h2>
+  <table class="table">
+    <tr><th>Job</th><th>Cron</th><th>Next run</th></tr>
+    {% for s in schedule %}<tr><td>{{ s.job }}</td><td><code>{{ s.cron }}</code></td><td>{{ s.next }}</td></tr>{% endfor %}
+  </table>
+  {% if not scheduler_in_web %}<p class="muted">Start the scheduler with <code>python -m porn_hunter schedule run</code>, or set <code>web.run_scheduler: true</code>.</p>{% endif %}
+</section>
+
+<section>
+  <h2>Jobs</h2>
+  <table class="table" id="jobs-table"><tr><td class="muted">Loading…</td></tr></table>
+</section>
+
+<section>
+  <h2>Log</h2>
+  <pre class="log">{{ log_tail or '(empty)' }}</pre>
+</section>
+{% endblock %}

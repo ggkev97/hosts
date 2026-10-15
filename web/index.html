@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Video to 3D</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;padding:16px;max-width:720px;margin-inline:auto}
+  button,input{font-size:16px;padding:10px}
+  #status{margin:16px 0;font-weight:600}
+  #plan{border:1px solid #ccc;max-width:100%;overflow:auto}
+  #plan svg{max-width:100%;height:auto}
+</style>
+</head>
+<body>
+<h1>Video to 3D</h1>
+<p>Slowly walk through a room filming every wall, then upload the video.</p>
+<input id="file" type="file" accept="video/*" capture="environment">
+<button id="go">Upload</button>
+<div id="status"></div>
+<div id="plan"></div>
+<p><a id="splat" hidden>Download 3D scene (.ply)</a></p>
+<script>
+const $ = id => document.getElementById(id);
+$("go").onclick = async () => {
+  const f = $("file").files[0];
+  if (!f) return;
+  const fd = new FormData(); fd.append("video", f);
+  $("status").textContent = "Uploading…";
+  const r = await fetch("/jobs", {method:"POST", body:fd});
+  if (!r.ok) { $("status").textContent = "Upload failed: " + r.status; return; }
+  poll((await r.json()).id);
+};
+async function poll(id) {
+  const s = await (await fetch("/jobs/" + id)).json();
+  $("status").textContent = s.stage + (s.error ? ": " + s.error : "");
+  if (s.stage === "done") {
+    $("plan").innerHTML = await (await fetch(`/jobs/${id}/floorplan.svg`)).text();
+    const a = $("splat"); a.href = `/jobs/${id}/splat.ply`; a.hidden = false;
+  } else if (s.stage !== "failed") setTimeout(() => poll(id), 3000);
+}
+</script>
+</body>
+</html>

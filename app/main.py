@@ -4,7 +4,10 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+from pydantic import BaseModel
+
 from . import jobs
+from .pipeline import catalogue, objects
 
 app = FastAPI(title="video-to-3d")
 MAX_BYTES = 2 * 1024**3
@@ -45,6 +48,72 @@ def splat(job_id: str):
     if not st or "splat" not in st:
         raise HTTPException(404)
     return FileResponse(st["splat"])
+
+
+def _objects(job_id: str) -> list[dict]:
+    if jobs.read_status(job_id) is None:
+        raise HTTPException(404)
+    objs = objects.load(jobs.job_dir(job_id))
+    if objs is None:
+        raise HTTPException(404, "objects not ready")
+    return objs
+
+
+@app.get("/jobs/{job_id}/objects")
+def list_objects(job_id: str):
+    return _objects(job_id)
+
+
+@app.get("/jobs/{job_id}/objects/{object_id}")
+def get_object(job_id: str, object_id: int):
+    o = next((o for o in _objects(job_id) if o["id"] == object_id), None)
+    if o is None:
+        raise HTTPException(404)
+    return o
+
+
+@app.get("/catalogue")
+def list_catalogue():
+    return catalogue.list_items()
+
+
+@app.get("/catalogue/{item_id}/model")
+def catalogue_model(item_id: str):
+    item = catalogue.get_item(item_id)
+    if item is None:
+        raise HTTPException(404)
+    return FileResponse(catalogue.root() / item["file"])
+
+
+class Replace(BaseModel):
+    catalogue_id: str
+    fit: str = "scale"
+
+
+@app.put("/jobs/{job_id}/objects/{object_id}/replacement")
+def replace_object(job_id: str, object_id: int, body: Replace):
+    objs = _objects(job_id)
+    o = next((o for o in objs if o["id"] == object_id), None)
+    item = catalogue.get_item(body.catalogue_id)
+    if o is None or item is None:
+        raise HTTPException(404)
+    try:
+        o["replacement"] = catalogue.place(o, item, body.fit)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    objects.write(jobs.job_dir(job_id), objs)
+    return o
+
+
+@app.delete("/jobs/{job_id}/objects/{object_id}/replacement")
+def revert_object(job_id: str, object_id: int):
+    objs = _objects(job_id)
+    o = next((o for o in objs if o["id"] == object_id), None)
+    if o is None:
+        raise HTTPException(404)
+    o["replacement"] = None
+    objects.write(jobs.job_dir(job_id), objs)
+    return o
 
 
 app.mount("/", StaticFiles(directory="web", html=True), name="web")

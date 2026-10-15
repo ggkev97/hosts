@@ -9,6 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
+from .pipeline import objects
 from .pipeline.floorplan import extract_floorplan, to_svg
 from .pipeline.frames import extract_frames
 
@@ -72,7 +73,14 @@ def run(job_id: str, video: Path) -> None:
         _set(job_id, stage="floorplan", splat=str(art["splat"]), cloud=str(art["cloud"]))
         walls = extract_floorplan(load_ply_xyz(art["cloud"]))
         (d / "floorplan.svg").write_text(to_svg(walls))
-        _set(job_id, stage="done", walls=len(walls))
+        _set(job_id, stage="segmenting", walls=len(walls))
+        try:  # objects are optional: a missing SAM 2 install must not fail the job
+            cloud = load_ply_xyz(art["cloud"])
+            _set(job_id, objects=len(objects.run_segmentation(d, cloud)))
+        except Exception as e:
+            traceback.print_exc()
+            _set(job_id, segment_error=str(e))
+        _set(job_id, stage="done")
     except Exception as e:  # surface any failure to the client
         traceback.print_exc()
         _set(job_id, stage="failed", error=str(e))

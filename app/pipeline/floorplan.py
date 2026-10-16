@@ -125,9 +125,9 @@ def to_svg(walls: list[Wall], px_per_m: float = 100.0, margin_m: float = 0.5) ->
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{wpx:.0f}" '
              f'height="{hpx:.0f}" viewBox="0 0 {wpx:.0f} {hpx:.0f}">',
              '<rect width="100%" height="100%" fill="white"/>']
-    for w in walls:
+    for i, w in enumerate(walls):
         a, b = p(w.x1, w.z1), p(w.x2, w.z2)
-        parts.append(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" '
+        parts.append(f'<line data-wall="{i}" x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" '
                      f'y2="{b[1]:.1f}" stroke="#222" stroke-width="8" stroke-linecap="square"/>')
         mx, mz = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
         # Offset the label perpendicular to the wall so it clears the stroke.

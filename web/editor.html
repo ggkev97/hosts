@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scene editor</title>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,sans-serif;overflow:hidden}
+  #view{position:fixed;inset:0}
+  #panel{position:fixed;left:0;right:0;bottom:0;max-height:42vh;overflow:auto;background:#fffe;padding:10px 14px;
+         box-shadow:0 -2px 8px #0003;font-size:15px}
+  @media(min-width:800px){#panel{right:auto;top:0;width:320px;max-height:none;bottom:0}}
+  button{font-size:15px;padding:8px 10px;margin:2px}
+  .obj{padding:8px;border:1px solid #ccc;border-radius:6px;margin:4px 0;cursor:pointer}
+  .obj.sel{border-color:#06c;background:#e8f1ff}
+  #msg{color:#555;margin:4px 0}
+</style>
+</head>
+<body>
+<div id="view"></div>
+<div id="panel"><b>Objects</b> <a href="/">back</a><div id="msg">Loading…</div><div id="list"></div><div id="detail"></div></div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from "three";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+import {PLYLoader} from "three/addons/loaders/PLYLoader.js";
+
+const $ = id => document.getElementById(id);
+const job = new URLSearchParams(location.search).get("job");
+const api = p => fetch(`/jobs/${job}${p}`);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf2f2f2);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x888888, 1.6));
+const cam = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.05, 200);
+cam.position.set(3, 3, 3);
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setSize(innerWidth, innerHeight);
+$("view").appendChild(renderer.domElement);
+const controls = new OrbitControls(cam, renderer.domElement);
+addEventListener("resize", () => {cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);});
+
+let objects = [], selected = null, cloudGeom = null, cloudPoints = null, xf = null;
+const boxes = new THREE.Group(), models = new THREE.Group();
+scene.add(boxes, models);
+const gltf = new GLTFLoader();
+const cache = {};
+
+// Object (yaw, size) -> three.js: lift's yaw runs +X toward +Z, three's rotation.y runs +X toward -Z.
+function boxMesh(o, color) {
+  const m = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(...o.size)),
+    new THREE.LineBasicMaterial({color}));
+  m.position.set(o.center[0], o.center[1], o.center[2]);
+  m.rotation.y = -o.yaw;
+  return m;
+}
+
+function insideAny(p, list) {
+  for (const o of list) {
+    const dx = p[0] - o.center[0], dy = p[1] - o.center[1], dz = p[2] - o.center[2];
+    const c = Math.cos(o.yaw), s = Math.sin(o.yaw);
+    const lx = dx * c + dz * s, lz = -dx * s + dz * c;   // into the object's yaw frame
+    if (Math.abs(lx) < o.size[0] * .55 && Math.abs(dy) < o.size[1] * .55 && Math.abs(lz) < o.size[2] * .55) return true;
+  }
+  return false;
+}
+
+function rebuildCloud() {   // hide original points inside replaced objects
+  if (!cloudGeom) return;
+  const src = cloudGeom.attributes.position.array, col = cloudGeom.attributes.color?.array;
+  const hide = objects.filter(o => o.replacement);
+  const pos = [], rgb = [], p = [0, 0, 0];
+  for (let i = 0; i < src.length; i += 3) {
+    const x = src[i], y = src[i + 1], z = src[i + 2];
+    p[0] = xf.s * (xf.R[0] * x + xf.R[1] * y + xf.R[2] * z);
+    p[1] = xf.s * (xf.R[3] * x + xf.R[4] * y + xf.R[5] * z);
+    p[2] = xf.s * (xf.R[6] * x + xf.R[7] * y + xf.R[8] * z);
+    if (hide.length && insideAny(p, hide)) continue;
+    pos.push(p[0], p[1], p[2]);
+    if (col) rgb.push(col[i], col[i + 1], col[i + 2]);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  if (col) g.setAttribute("color", new THREE.Float32BufferAttribute(rgb, 3));
+  if (cloudPoints) {scene.remove(cloudPoints); cloudPoints.geometry.dispose();}
+  cloudPoints = new THREE.Points(g, new THREE.PointsMaterial({size: 0.02, vertexColors: !!col, color: col ? 0xffffff : 0x666666}));
+  scene.add(cloudPoints);
+}
+
+async function loadModel(id) {
+  cache[id] ??= await gltf.loadAsync(`/catalogue/${id}/model`);
+  return cache[id].scene.clone(true);
+}
+
+async function rebuildObjects() {
+  boxes.clear(); models.clear();
+  for (const o of objects) {
+    const b = boxMesh(o, o === selected ? 0x0066cc : o.replacement ? 0x999999 : 0xdd5500);
+    boxes.add(b);
+    const r = o.replacement;
+    if (!r) continue;
+    const m = await loadModel(r.catalogue_id), wrap = new THREE.Group();
+    m.position.set(-r.offset[0], -r.offset[1], -r.offset[2]);
+    wrap.add(m);
+    wrap.position.set(...r.position);
+    wrap.rotation.y = -r.yaw;
+    wrap.scale.setScalar(r.scale);
+    models.add(wrap);
+  }
+}
+
+function render() {
+  $("list").innerHTML = "";
+  for (const o of objects) {
+    const d = document.createElement("div");
+    d.className = "obj" + (o === selected ? " sel" : "");
+    d.textContent = `#${o.id} ${o.label ?? "object"} · ${o.size.map(v => v.toFixed(2)).join("×")} m` +
+      (o.replacement ? ` → ${o.replacement.catalogue_id}` : "");
+    d.onclick = () => select(o);
+    $("list").appendChild(d);
+  }
+}
+
+async function select(o) {
+  selected = o;
+  render();
+  await rebuildObjects();
+  const det = $("detail");
+  det.innerHTML = `<p><b>Replace #${o.id}</b></p>`;
+  const sug = await (await api(`/objects/${o.id}/suggestions`)).json();
+  if (!sug.length) det.innerHTML += "<p>No catalogue items. Add .glb files to catalogue/.</p>";
+  for (const s of sug) {
+    for (const fit of ["scale", "keep"]) {
+      const b = document.createElement("button");
+      b.textContent = `${s.catalogue_id}${s.label_match ? " ★" : ""} (${fit})`;
+      b.onclick = () => put(o, "PUT", {catalogue_id: s.catalogue_id, fit});
+      det.appendChild(b);
+    }
+  }
+  if (o.replacement) {
+    const b = document.createElement("button");
+    b.textContent = "Revert to original";
+    b.onclick = () => put(o, "DELETE");
+    det.appendChild(b);
+  }
+}
+
+async function put(o, method, body) {
+  const r = await fetch(`/jobs/${job}/objects/${o.id}/replacement`, {method,
+    headers: {"content-type": "application/json"}, body: body && JSON.stringify(body)});
+  if (!r.ok) {$("msg").textContent = "Failed: " + r.status; return;}
+  Object.assign(o, await r.json());
+  rebuildCloud();
+  await select(o);
+}
+
+async function init() {
+  if (!job) {$("msg").textContent = "Open as /editor.html?job=<id>"; return;}
+  const st = await (await api("")).json();
+  const R = (st.up_rotation ?? [[1, 0, 0], [0, 1, 0], [0, 0, 1]]).flat();
+  xf = {R, s: st.scale ?? 1};
+  const r = await api("/objects");
+  objects = r.ok ? await r.json() : [];
+  $("msg").textContent = r.ok ? `${objects.length} objects. Tap one to replace it.` : "Objects not ready yet.";
+  render();
+  await rebuildObjects();
+  new PLYLoader().load(`/jobs/${job}/cloud.ply`, g => {
+    cloudGeom = g;
+    rebuildCloud();
+    if (objects[0]) {controls.target.set(...objects[0].center); cam.position.set(objects[0].center[0] + 3, 2.5, objects[0].center[2] + 3);}
+  });
+}
+init().catch(e => $("msg").textContent = "Error: " + e);
+renderer.setAnimationLoop(() => {controls.update(); renderer.render(scene, cam);});
+</script>
+</body>
+</html>

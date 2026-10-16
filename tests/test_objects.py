@@ -126,3 +126,46 @@ def test_catalogue_and_replacement_api(tmp_path, monkeypatch):
                  json={"catalogue_id": "chair", "fit": "x"}).status_code == 400
     assert c.get(f"/jobs/{jid}/objects/0").json()["replacement"]["catalogue_id"] == "chair"
     assert c.delete(f"/jobs/{jid}/objects/0/replacement").json()["replacement"] is None
+
+
+def test_suggestions_prefer_label_then_size():
+    items = [{"id": "big", "label": "chair", "size": [2, 1, 2]}, {"id": "tbl", "label": "table", "size": [0.5, 0.9, 0.5]},
+             {"id": "chair", "label": "chair", "size": [0.5, 0.9, 0.5]}]
+    obj = {"size": [0.5, 0.9, 0.5], "label": "chair"}
+    ranked = [s["catalogue_id"] for s in catalogue.suggest(obj, items)]
+    assert ranked == ["chair", "big", "tbl"]
+    assert catalogue.suggest({"size": [0.5, 0.9, 0.5], "label": None}, items)[0]["catalogue_id"] in ("tbl", "chair")
+
+
+def test_labelling_uses_best_view(tmp_path):
+    from PIL import Image
+    a, b, cloud = scene()
+    cams = cameras(4)
+    for i, c in enumerate(cams):
+        c.file = f"{i}.jpg"
+        Image.new("RGB", (c.w, c.h), "gray").save(tmp_path / c.file)
+    objs = lift.build_objects(cloud, [(c, [raster(a, c), raster(b, c)]) for c in cams], max_obs_points_frac=0.6)
+    from app.pipeline import classify
+    classify.label_objects(objs, cloud, cams, tmp_path, lambda img, labels: ("sofa", 0.9))
+    assert {o.label for o in objs} == {"sofa"} and objs[0].to_json()["label"] == "sofa"
+
+
+def test_scale_endpoint_rescales_walls_and_objects(tmp_path, monkeypatch):
+    from app.pipeline import scale
+    from app.pipeline.floorplan import Wall
+    monkeypatch.setattr(jobs, "DATA", tmp_path / "jobs")
+    jid = "abcdef123456"
+    d = jobs.job_dir(jid)
+    d.mkdir(parents=True)
+    (d / "status.json").write_text(json.dumps({"id": jid, "stage": "done", "scale": 1.0}))
+    scale.save_walls(d, [Wall(0, 0, 2, 0), Wall(2, 0, 2, 1)])
+    objects.write(d, [{"id": 0, "label": None, "center": [1, 0.5, 1], "size": [1, 1, 1], "yaw": 0,
+                       "bottom_y": 0.0, "n_points": 1, "n_views": 2, "replacement": None}])
+    c = TestClient(app)
+    assert c.post(f"/jobs/{jid}/scale", json={"wall": 0, "length_m": 4.0}).json()["factor"] == 2.0
+    assert [round(w["length"], 6) for w in c.get(f"/jobs/{jid}/walls").json()] == [4.0, 2.0]
+    assert c.get(f"/jobs/{jid}/objects/0").json()["size"] == [2, 2, 2]
+    assert c.get(f"/jobs/{jid}/status" if False else f"/jobs/{jid}").json()["scale"] == 2.0
+    assert 'data-wall="1"' in c.get(f"/jobs/{jid}/floorplan.svg").text
+    assert c.post(f"/jobs/{jid}/scale", json={"wall": 9, "length_m": 1}).status_code == 400
+    assert c.post(f"/jobs/{jid}/scale", json={"factor": 1000}).status_code == 400

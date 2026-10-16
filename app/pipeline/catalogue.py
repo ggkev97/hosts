@@ -52,7 +52,14 @@ def list_items() -> list[dict]:
             lo, hi = bounds(p)
         except (ValueError, KeyError, OSError, struct.error, json.JSONDecodeError):
             continue
-        items.append({"id": p.stem, "file": p.name, "size": [h - l for l, h in zip(lo, hi)],
+        meta = {}
+        if p.with_suffix(".json").exists():  # optional sidecar: {"label": "chair", "name": "Oak chair"}
+            try:
+                meta = json.loads(p.with_suffix(".json").read_text())
+            except json.JSONDecodeError:
+                pass
+        items.append({"id": p.stem, "file": p.name, "label": meta.get("label"),
+                      "name": meta.get("name", p.stem), "size": [h - l for l, h in zip(lo, hi)],
                       "bounds_min": lo})
     return items
 
@@ -82,3 +89,17 @@ def place(obj: dict, item: dict, fit: str = "scale") -> dict:
     return {"catalogue_id": item["id"], "fit": fit, "scale": s, "yaw": obj["yaw"],
             "position": [obj["center"][0], obj["bottom_y"], obj["center"][2]],
             "offset": [lo[0] + sx / 2, lo[1], lo[2] + sz / 2]}
+
+
+def suggest(obj: dict, items: list[dict], limit: int = 5) -> list[dict]:
+    """Rank catalogue items for an object: label match first, then closeness in size."""
+    import math
+
+    def dist(item):
+        a = sorted(obj["size"][::2]) + [obj["size"][1]]  # footprint dims (sorted) + height
+        b = sorted(item["size"][::2]) + [item["size"][1]]
+        return sum(abs(math.log(max(x, 1e-3) / max(y, 1e-3))) for x, y in zip(a, b))
+
+    ranked = sorted(items, key=lambda i: (obj.get("label") is None or i.get("label") != obj["label"], dist(i)))
+    return [{"catalogue_id": i["id"], "label_match": bool(obj.get("label") and i.get("label") == obj["label"]),
+             "size_distance": dist(i)} for i in ranked[:limit]]

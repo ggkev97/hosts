@@ -35,10 +35,12 @@ class Object3D:
     bottom_y: float
     n_points: int
     n_views: int
+    label: str | None = None
+    label_score: float | None = None
     point_idx: np.ndarray = field(repr=False, default_factory=lambda: np.zeros(0, int))
 
     def to_json(self) -> dict:
-        return {"id": self.id, "label": None, "center": self.center, "size": self.size,
+        return {"id": self.id, "label": self.label, "label_score": self.label_score, "center": self.center, "size": self.size,
                 "yaw": self.yaw, "bottom_y": self.bottom_y,
                 "n_points": self.n_points, "n_views": self.n_views, "replacement": None}
 
@@ -199,7 +201,7 @@ def build_objects(points: np.ndarray, per_frame_masks: list[tuple[Camera, list[n
         center, size, yaw, bottom = fit_box(points[idx])
         if max(size[0], size[2]) > max_extent or max(size) < 0.1:
             continue
-        objs.append(Object3D(0, center, size, yaw, bottom, int(len(idx)), len(frames), idx))
+        objs.append(Object3D(0, center, size, yaw, bottom, int(len(idx)), len(frames), point_idx=idx))
     objs.sort(key=lambda o: -o.n_points)
     for i, o in enumerate(objs):
         o.id = i

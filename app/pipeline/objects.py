@@ -12,13 +12,21 @@ from . import lift
 MaskFn = Callable[[Path], list[np.ndarray]]
 
 
-def run_segmentation(work: Path, cloud: np.ndarray, mask_fn: MaskFn | None = None,
-                     max_frames: int = 60) -> list[lift.Object3D]:
-    data = work / "data"
-    cams = lift.load_cameras(data / "transforms.json")
+def load_cameras(work: Path) -> list[lift.Camera]:
+    """Poses in the frame the exported cloud lives in (before gravity alignment)."""
+    cams = lift.load_cameras(work / "data" / "transforms.json")
     dp = next(work.rglob("dataparser_transforms.json"), None)
     if dp is not None:
         lift.apply_dataparser_transform(cams, dp)
+    return cams
+
+
+def run_segmentation(work: Path, cloud: np.ndarray, mask_fn: MaskFn | None = None,
+                     max_frames: int = 60, cams: list[lift.Camera] | None = None,
+                     classify_fn=None) -> list[lift.Object3D]:
+    """`cloud` and `cams` must be in the same frame (pass aligned versions of both)."""
+    data = work / "data"
+    cams = cams if cams is not None else load_cameras(work)
     if mask_fn is None:
         from . import segment
         gen = segment.load_generator()
@@ -26,6 +34,9 @@ def run_segmentation(work: Path, cloud: np.ndarray, mask_fn: MaskFn | None = Non
     step = max(1, len(cams) // max_frames)
     per_frame = [(c, mask_fn(data / c.file)) for c in cams[::step]]
     objs = lift.build_objects(cloud, per_frame)
+    if classify_fn is not None:
+        from . import classify
+        classify.label_objects(objs, cloud, cams, data, classify_fn)
     save(work, objs)
     return objs
 

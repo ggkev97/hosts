@@ -9,8 +9,8 @@ from pathlib import Path
 
 import numpy as np
 
-from .pipeline import objects
-from .pipeline.floorplan import extract_floorplan, to_svg
+from .pipeline import align, classify, objects, scale
+from .pipeline.floorplan import extract_floorplan
 from .pipeline.frames import extract_frames
 
 DATA = Path("data/jobs")
@@ -71,12 +71,21 @@ def run(job_id: str, video: Path) -> None:
         from .pipeline.reconstruct import reconstruct  # lazy: needs GPU toolchain
         art = reconstruct(d / "frames", d)
         _set(job_id, stage="floorplan", splat=str(art["splat"]), cloud=str(art["cloud"]))
-        walls = extract_floorplan(load_ply_xyz(art["cloud"]))
-        (d / "floorplan.svg").write_text(to_svg(walls))
-        _set(job_id, stage="segmenting", walls=len(walls))
+        cloud = load_ply_xyz(art["cloud"])
+        cams = objects.load_cameras(d)
+        R = align.gravity_rotation(cloud, cams)  # floor normal -> +Y; viewer applies R to the splat
+        cloud = cloud @ R.T
+        align.rotate_cameras(cams, R)
+        walls = extract_floorplan(cloud)
+        scale.save_walls(d, walls)
+        _set(job_id, stage="segmenting", walls=len(walls), up_rotation=R.tolist(), scale=1.0)
         try:  # objects are optional: a missing SAM 2 install must not fail the job
-            cloud = load_ply_xyz(art["cloud"])
-            _set(job_id, objects=len(objects.run_segmentation(d, cloud)))
+            try:
+                clf = classify.load_classifier()
+            except RuntimeError as e:  # labels are a bonus; objects still work without them
+                clf = None
+                _set(job_id, label_error=str(e))
+            _set(job_id, objects=len(objects.run_segmentation(d, cloud, cams=cams, classify_fn=clf)))
         except Exception as e:
             traceback.print_exc()
             _set(job_id, segment_error=str(e))

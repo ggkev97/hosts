@@ -12,7 +12,10 @@ Turn a walkthrough video into an editable 3D scene and a dimensioned floor plan.
 | Floor plan from point cloud (RANSAC walls, Manhattan snap, SVG) | done, tested on synthetic rooms |
 | Object segmentation: SAM 2 masks lifted to 3D boxes (`/jobs/{id}/objects`) | lifting + API tested on synthetic scenes; SAM 2 wrapper never run (needs torch, `sam2`, GPU) |
 | Object replacement from a glTF catalogue (`/catalogue`, `PUT .../replacement`) | API tested; returns a placement transform, no rendering yet |
-| Web 3D editor | not started (current UI uploads and shows the plan) |
+| Gravity alignment (camera-up prior + floor RANSAC) | tested on synthetic clouds; not run on real reconstructions |
+| Metric scale (`POST /jobs/{id}/scale`, tap a wall in the plan) | done, tested |
+| Object labels (CLIP zero-shot) + catalogue suggestions | suggestions tested; CLIP never run (needs torch + transformers) |
+| Web 3D editor (`/editor.html?job=ID`, three.js point cloud + boxes + replacement) | exercised in headless Chromium on a synthetic job; no splat rendering yet |
 
 ## Run
 
@@ -33,9 +36,12 @@ Drop `.glb`/`.gltf` files (Y-up, metres) into `catalogue/` (or `CATALOGUE_DIR`);
 stores the transform on the object. The viewer must hide the original object itself
 (e.g. crop the splat to the box); the splat is not edited server-side.
 
+`python tools/make_catalogue.py` regenerates the placeholder box-furniture in `catalogue/`
+(sidecar `<id>.json` gives `label`/`name`). Replace with real assets when you have them.
+The editor shows the reconstruction's point cloud, not the Gaussian splat.
+
 Unverified on real data: pose/cloud frame alignment (we apply Nerfstudio's
-`dataparser_transforms.json`), the +Y-up assumption (nothing gravity-aligns the cloud yet,
-which also affects the floor plan), and mask quality/thresholds.
+`dataparser_transforms.json`), gravity alignment (assumes the phone was held roughly upright), and mask quality/thresholds.
 
 ## Limits
 

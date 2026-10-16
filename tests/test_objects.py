@@ -169,3 +169,14 @@ def test_scale_endpoint_rescales_walls_and_objects(tmp_path, monkeypatch):
     assert 'data-wall="1"' in c.get(f"/jobs/{jid}/floorplan.svg").text
     assert c.post(f"/jobs/{jid}/scale", json={"wall": 9, "length_m": 1}).status_code == 400
     assert c.post(f"/jobs/{jid}/scale", json={"factor": 1000}).status_code == 400
+
+
+def test_starter_catalogue_is_valid(tmp_path, monkeypatch):
+    import subprocess
+    import sys
+    subprocess.run([sys.executable, "tools/make_catalogue.py", str(tmp_path)], check=True)
+    monkeypatch.setenv("CATALOGUE_DIR", str(tmp_path))
+    items = {i["id"]: i for i in catalogue.list_items()}
+    assert {"chair", "table", "sofa", "bed"} <= set(items)
+    assert items["chair"]["label"] == "chair"
+    assert np.allclose(items["bed"]["size"], [1.6, 1.0, 2.0])

@@ -19,7 +19,8 @@
 <button id="go">Upload</button>
 <div id="status"></div>
 <div id="plan"></div>
-<p><a id="splat" hidden>Download 3D scene (.ply)</a></p>
+<p>Tap a wall in the plan and enter its real length to set the scale.</p>
+<p><a id="splat" hidden>Download 3D scene (.ply)</a> <a id="edit" hidden>Edit objects</a></p>
 <script>
 const $ = id => document.getElementById(id);
 $("go").onclick = async () => {
@@ -36,6 +37,16 @@ async function poll(id) {
   $("status").textContent = s.stage + (s.error ? ": " + s.error : "");
   if (s.stage === "done") {
     $("plan").innerHTML = await (await fetch(`/jobs/${id}/floorplan.svg`)).text();
+    $("plan").onclick = async e => {
+      const w = e.target.dataset?.wall;
+      if (w === undefined) return;
+      const len = parseFloat(prompt("Real length of this wall in metres?"));
+      if (!(len > 0)) return;
+      await fetch(`/jobs/${id}/scale`, {method:"POST", headers:{"content-type":"application/json"},
+        body: JSON.stringify({wall: +w, length_m: len})});
+      $("plan").innerHTML = await (await fetch(`/jobs/${id}/floorplan.svg?` + Date.now())).text();
+    };
+    $("edit").href = `/editor.html?job=${id}`; $("edit").hidden = false;
     const a = $("splat"); a.href = `/jobs/${id}/splat.ply`; a.hidden = false;
   } else if (s.stage !== "failed") setTimeout(() => poll(id), 3000);
 }

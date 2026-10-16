@@ -26,6 +26,12 @@ Turn a walkthrough video into an editable 3D scene and a dimensioned floor plan.
 The reconstruction step needs an NVIDIA GPU with `colmap` and Nerfstudio installed.
 Without them, jobs fail at the `reconstructing` stage with a clear error.
 
+## GPU machine setup
+
+On a fresh Ubuntu 22.04 box with an NVIDIA GPU: `bash scripts/setup_gpu.sh && ./scripts/run.sh`
+(installs COLMAP, Nerfstudio, SAM 2, CLIP and the SAM 2 checkpoint). Written without GPU
+access, so expect to fix a step or two on first run.
+
 ## Objects and catalogue
 
 Install `torch` and `sam2` separately and set `SAM2_CHECKPOINT` / `SAM2_CONFIG`; if SAM 2 is

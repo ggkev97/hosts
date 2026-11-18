@@ -1,7 +1,7 @@
 # Title: hostsVN Adult VN
-# Last modified: 13 Jul 2026 16:52 UTC+7
-# Version: 2607131652
-# Blocked: 1.895 domains
+# Last modified: 08 Nov 2026 22:51 UTC+7
+# Version: 2611082251
+# Blocked: 1.961 domains
 # Only include adult domains (Vietnamese language)
 # Homepage: https://bigdargon.github.io/hostsVN/
 # GitHub: https://github.com/bigdargon/hostsVN
@@ -96,6 +96,7 @@
 0.0.0.0 cap3.autos
 0.0.0.0 cap3.beer
 0.0.0.0 cap3.click
+0.0.0.0 cap3.email
 0.0.0.0 cap3.monster
 0.0.0.0 cap3.pics
 0.0.0.0 cap3.pro
@@ -256,6 +257,7 @@
 0.0.0.0 ephimsex.net
 0.0.0.0 erotic-hentai.com
 0.0.0.0 etinhyeu.com
+0.0.0.0 exviet69.cc
 0.0.0.0 fanpay.org
 0.0.0.0 fap18.net
 0.0.0.0 file.mm1cloud.com
@@ -269,7 +271,10 @@
 0.0.0.0 gaicaocap.xyz
 0.0.0.0 gaichanh.co
 0.0.0.0 gaidam18.com
+0.0.0.0 gaidep.blog
 0.0.0.0 gaidepvn.xyz
+0.0.0.0 gaidepxx.com
+0.0.0.0 gaidepxx.me
 0.0.0.0 gaigoi.homes
 0.0.0.0 gaigoi.id
 0.0.0.0 gaigoi.live
@@ -322,6 +327,7 @@
 0.0.0.0 gaigu.info
 0.0.0.0 gaigu.net
 0.0.0.0 gaigu.xyz
+0.0.0.0 gaigu18.blog
 0.0.0.0 gaigu6.tv
 0.0.0.0 gaigu7.tv
 0.0.0.0 gaigu8.com
@@ -436,6 +442,7 @@
 0.0.0.0 heo69.com
 0.0.0.0 heo69.icu
 0.0.0.0 heo69.top
+0.0.0.0 heoav.com
 0.0.0.0 heodamtv.us
 0.0.0.0 heodem.com
 0.0.0.0 heohay.com
@@ -447,17 +454,22 @@
 0.0.0.0 heovl.bot
 0.0.0.0 heovl.cc
 0.0.0.0 heovl.com
+0.0.0.0 heovl.fit
 0.0.0.0 heovl.fun
+0.0.0.0 heovl.im
 0.0.0.0 heovl.live
 0.0.0.0 heovl.me
 0.0.0.0 heovl.moe
+0.0.0.0 heovl.name
 0.0.0.0 heovl.net
 0.0.0.0 heovl.tube
 0.0.0.0 heovl.tv
 0.0.0.0 heovl1.com
 0.0.0.0 heovl1.net
 0.0.0.0 heovlx.com
+0.0.0.0 heoxvn.blog
 0.0.0.0 hhentai.net
+0.0.0.0 hihisex.app
 0.0.0.0 hihisex.pro
 0.0.0.0 hihisex.vip
 0.0.0.0 hinhgai.com
@@ -479,8 +491,12 @@
 0.0.0.0 img.hentaivv1.com
 0.0.0.0 img.nangcuc.dev
 0.0.0.0 img.nangcucz.link
+0.0.0.0 img.phimkk.pro
+0.0.0.0 img.sexbuz.com
 0.0.0.0 img.vl69.pro
+0.0.0.0 img.xxxmeo.com
 0.0.0.0 img.xxxphim.top
+0.0.0.0 img.xxxviet.io
 0.0.0.0 info.xnxx.gold
 0.0.0.0 japanhdv.biz
 0.0.0.0 japansex.blog
@@ -495,6 +511,7 @@
 0.0.0.0 javgg.me
 0.0.0.0 javgg.sbs
 0.0.0.0 javgiga.com
+0.0.0.0 javhay.buzz
 0.0.0.0 javhay.click
 0.0.0.0 javhay.co
 0.0.0.0 javhay.cyou
@@ -513,11 +530,13 @@
 0.0.0.0 javhd.best
 0.0.0.0 javhd.bio
 0.0.0.0 javhd.charity
+0.0.0.0 javhd.co.uk
 0.0.0.0 javhd.contact
 0.0.0.0 javhd.exchange
 0.0.0.0 javhd.im
 0.0.0.0 javhd.lol
 0.0.0.0 javhd.moe
+0.0.0.0 javhd.mov
 0.0.0.0 javhd.network
 0.0.0.0 javhd.ninja
 0.0.0.0 javhd.one
@@ -532,13 +551,26 @@
 0.0.0.0 javhdhay.us
 0.0.0.0 javhdhayz.com
 0.0.0.0 javhdvietsub.com
+0.0.0.0 javhdz.ac
+0.0.0.0 javhdz.bz
+0.0.0.0 javhdz.cam
+0.0.0.0 javhdz.city
+0.0.0.0 javhdz.fun
 0.0.0.0 javhdz.hot
+0.0.0.0 javhdz.la
+0.0.0.0 javhdz.link
+0.0.0.0 javhdz.one
+0.0.0.0 javhdz.page
 0.0.0.0 javhdz.pro
+0.0.0.0 javhdz.pw
+0.0.0.0 javhdz.red
+0.0.0.0 javhdz.wine
 0.0.0.0 javhiv.com
 0.0.0.0 javhiv.xyz
 0.0.0.0 javlxx.com
 0.0.0.0 javmienphi.live
 0.0.0.0 javmoi.org
+0.0.0.0 javmup.xin
 0.0.0.0 javne.net
 0.0.0.0 javnhat.vip
 0.0.0.0 javnhatban.pro
@@ -553,6 +585,7 @@
 0.0.0.0 javphim.vin
 0.0.0.0 javphoz.com
 0.0.0.0 javsex.cc
+0.0.0.0 javsub.blog
 0.0.0.0 javsub.cc
 0.0.0.0 javsub.co
 0.0.0.0 javsub.live
@@ -587,6 +620,7 @@
 0.0.0.0 kichduc.biz
 0.0.0.0 kichduc.cc
 0.0.0.0 kieunuvadaigia.xyz
+0.0.0.0 kkphimheo.bond
 0.0.0.0 kphimsex.xyz
 0.0.0.0 ktv.bio
 0.0.0.0 kynudep.net
@@ -647,6 +681,7 @@
 0.0.0.0 m.heyzo.biz
 0.0.0.0 m.sexsub.xyz
 0.0.0.0 m.viet69.tech
+0.0.0.0 m.xnhau.city
 0.0.0.0 manhwa24hs.com
 0.0.0.0 manhwavn.com
 0.0.0.0 massagebinhduong.vipvn.net
@@ -723,6 +758,7 @@
 0.0.0.0 phim-javhd.pro
 0.0.0.0 phim-sec.one
 0.0.0.0 phim-set.info
+0.0.0.0 phim-sex.io
 0.0.0.0 phim-sex.live
 0.0.0.0 phim-sex.net
 0.0.0.0 phim-sexhd.biz
@@ -734,6 +770,7 @@
 0.0.0.0 phim.vl9x.net
 0.0.0.0 phim.vuasex.co
 0.0.0.0 phim.xxxhai.com
+0.0.0.0 phim.xxxmeo.com
 0.0.0.0 phim18.co
 0.0.0.0 phim18.online
 0.0.0.0 phim18.ws
@@ -743,10 +780,12 @@
 0.0.0.0 phim18hd.net
 0.0.0.0 phim18hd.one
 0.0.0.0 phim18hd.top
+0.0.0.0 phim18k.blog
 0.0.0.0 phim18k.com
 0.0.0.0 phim18vn.com
 0.0.0.0 phim18x.net
 0.0.0.0 phim18xxx.com
+0.0.0.0 phim18z.co.uk
 0.0.0.0 phim2k.org
 0.0.0.0 phim69.info
 0.0.0.0 phim85.com
@@ -769,6 +808,7 @@
 0.0.0.0 phimhentai.info
 0.0.0.0 phimhentai.xyz
 0.0.0.0 phimhentaiz.org
+0.0.0.0 phimheo.bar
 0.0.0.0 phimheo.biz
 0.0.0.0 phimheo.fun
 0.0.0.0 phimheo.net
@@ -791,6 +831,7 @@
 0.0.0.0 phimkk.com
 0.0.0.0 phimkk.me
 0.0.0.0 phimkk.net
+0.0.0.0 phimkk.pro
 0.0.0.0 phimkk.ws
 0.0.0.0 phimloanluan.net
 0.0.0.0 phimloanluan.org
@@ -1032,6 +1073,7 @@
 0.0.0.0 pornpic.org
 0.0.0.0 pornzo.net
 0.0.0.0 pphimsex.com
+0.0.0.0 qmh.garden
 0.0.0.0 qmh.quest
 0.0.0.0 qmh.rest
 0.0.0.0 qmh.sex
@@ -1066,10 +1108,12 @@
 0.0.0.0 ribaysteak.ru
 0.0.0.0 rphang.ac
 0.0.0.0 rphang.cc
+0.0.0.0 rphang.com
 0.0.0.0 rphang.dog
 0.0.0.0 rphang.lat
 0.0.0.0 rphang.luutrurp.com
 0.0.0.0 rphang.me
+0.0.0.0 rphang.now
 0.0.0.0 rphang.online
 0.0.0.0 rphangcdn.com
 0.0.0.0 rphangs.net
@@ -1078,9 +1122,12 @@
 0.0.0.0 rphangx.net
 0.0.0.0 rphangx.tv
 0.0.0.0 s.chinav.sex
+0.0.0.0 s.gaidep.blog
+0.0.0.0 s.gaigu18.blog
 0.0.0.0 s.phimsexvip.cc
 0.0.0.0 s.vnchich.net
 0.0.0.0 s3xvn.com
+0.0.0.0 s5.phimkk.pro
 0.0.0.0 s666.tv
 0.0.0.0 s666tv.com
 0.0.0.0 sayhentai.me
@@ -1125,6 +1172,7 @@
 0.0.0.0 sexbaophe.pro
 0.0.0.0 sexbattu.com
 0.0.0.0 sexbulon.pro
+0.0.0.0 sexbuz.com
 0.0.0.0 sexchauau.club
 0.0.0.0 sexchauau.co
 0.0.0.0 sexchauau.mobi
@@ -1158,6 +1206,7 @@
 0.0.0.0 sexhay.biz
 0.0.0.0 sexhay.vip
 0.0.0.0 sexhay123.com
+0.0.0.0 sexhay247.net
 0.0.0.0 sexhay2k.com
 0.0.0.0 sexhay3x.com
 0.0.0.0 sexhay69.mobi
@@ -1268,6 +1317,7 @@
 0.0.0.0 sextop1.one
 0.0.0.0 sextop1.page
 0.0.0.0 sextop1.site
+0.0.0.0 sextop1.spa
 0.0.0.0 sextop1.team
 0.0.0.0 sextop1.video
 0.0.0.0 sextop10.pro
@@ -1372,6 +1422,8 @@
 0.0.0.0 ssieukhung.com
 0.0.0.0 static.manhwa24hs.com
 0.0.0.0 stream.quatvn.lol
+0.0.0.0 subjav.buzz
+0.0.0.0 subjav.cyou
 0.0.0.0 subjav.live
 0.0.0.0 subjav.org
 0.0.0.0 subjav.sex
@@ -1536,6 +1588,7 @@
 0.0.0.0 tzqctz.com
 0.0.0.0 up1.hhentai.net
 0.0.0.0 up2.hentaivn.tv
+0.0.0.0 v.javhd.co.uk
 0.0.0.0 vailonxx.co
 0.0.0.0 vailonxx.com
 0.0.0.0 vailonxx.vip
@@ -1630,6 +1683,11 @@
 0.0.0.0 vlsex.pro
 0.0.0.0 vlsex88.one
 0.0.0.0 vlxphim.me
+0.0.0.0 vlxvn.beer
+0.0.0.0 vlxvn.bond
+0.0.0.0 vlxvn.com
+0.0.0.0 vlxvn.fans
+0.0.0.0 vlxvn.xin
 0.0.0.0 vlxx-phimsex.com
 0.0.0.0 vlxx-vip.com
 0.0.0.0 vlxx.ac
@@ -1672,10 +1730,12 @@
 0.0.0.0 vlxx.moe
 0.0.0.0 vlxx.moi
 0.0.0.0 vlxx.money
+0.0.0.0 vlxx.ms
 0.0.0.0 vlxx.mx
 0.0.0.0 vlxx.net
 0.0.0.0 vlxx.network
 0.0.0.0 vlxx.pet
+0.0.0.0 vlxx.phd
 0.0.0.0 vlxx.pw
 0.0.0.0 vlxx.rocks
 0.0.0.0 vlxx.ru
@@ -1739,6 +1799,7 @@
 0.0.0.0 vnchich.com
 0.0.0.0 vnchich.net
 0.0.0.0 vnok.net
+0.0.0.0 vnsextop1.com
 0.0.0.0 vnvn77.com
 0.0.0.0 vnxnxx.cc
 0.0.0.0 vnxnxx.xyz
@@ -1780,8 +1841,11 @@
 0.0.0.0 www.xamvn.top
 0.0.0.0 www.xnxx.gold
 0.0.0.0 wwwxxx.pro
+0.0.0.0 x.javhd.co.uk
+0.0.0.0 x.phim18z.co.uk
 0.0.0.0 x.phimsexsub.pw
 0.0.0.0 x10.viet69.life
+0.0.0.0 x5.xxxviet.io
 0.0.0.0 xamvn.pro
 0.0.0.0 xamvn.sh
 0.0.0.0 xamvn.top
@@ -1827,6 +1891,7 @@
 0.0.0.0 xmovies-xnxx.com
 0.0.0.0 xn--sexvitnam-zj7d.com
 0.0.0.0 xnhau.blog
+0.0.0.0 xnhau.city
 0.0.0.0 xnhau.io
 0.0.0.0 xnhau.moe
 0.0.0.0 xnxvn.org
@@ -1877,6 +1942,7 @@
 0.0.0.0 xxvnurl.com
 0.0.0.0 xxx.ditnhau.cc
 0.0.0.0 xxxhay.biz
+0.0.0.0 xxxmeo.com
 0.0.0.0 xxxmoi.com
 0.0.0.0 xxxner.com
 0.0.0.0 xxxnhatban.cyou
